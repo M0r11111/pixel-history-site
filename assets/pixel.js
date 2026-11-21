@@ -500,6 +500,7 @@ function PXFactory(global) {
     crystal: ['...c....', '..cCc...', '..cCc.c.', '.ccCcCc.', '.cCccCc.', '.cCc.cc.', '..ccccc.', '.BBBBBB.'],
     lantern: ['...BB...', '..BBBB..', '.B.yy.B.', '.ByYYyB.', '.ByYYyB.', '.B.yy.B.', '..BBBB..', '........'],
     heart: ['.rr.rr.', 'rrwrrrr', 'rrrrrrr', '.rrrrr.', '..rrr..', '...r...'],
+    controller: ['........', '.dddddd.', 'dccccccd', 'cwcccrcc', 'wwwccccy', 'cwcccrcc', 'dccddccd', '.dd..dd.'],
     gift: ['....yy..yy....', '...yYy..yYy...', '....yyyyyy....', 'rrrrrryyrrrrrr', 'rrrrrryYrrrrrr', 'rrrrrryyrrrrrr', '.rrrrryyrrrrr.', '.rrrrryyrrrrr.', '.rrrrryyrrrrr.', '.rrrrryyrrrrr.', '.rrrrryyrrrrr.', '.rrrrryyrrrrr.']
   };
   function drawIcon(canvas, name, outline = false) {

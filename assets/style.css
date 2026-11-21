@@ -351,3 +351,8 @@ footer nav { display: flex; gap: 24px; }
 .badge-s.bad { border-color: var(--rust); color: var(--rust); }
 .mini-bar { height: 6px; background: var(--surface2); margin-top: 8px; } .mini-bar i { display: block; height: 100%; background: var(--yellow); }
 @media (max-width: 900px) { .acc-grid { grid-template-columns: minmax(0, 1fr); } .game-row { grid-template-columns: minmax(0, 1fr); } .game-row .acts { justify-content: flex-start; } .nav-links { display: none; } }
+
+/* переключатель стилей (для сравнения вариантов) */
+.theme-switch { position: fixed; left: max(12px, env(safe-area-inset-left, 0px)); bottom: max(12px, env(safe-area-inset-bottom, 0px)); z-index: 80; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; max-width: calc(100% - 24px); background: var(--ink); color: var(--text); border: 3px solid var(--yellow); padding: 8px 10px; font-size: 12px; box-shadow: 4px 4px 0 var(--rust); }
+.theme-switch button { font: 700 11px var(--mono); background: transparent; color: var(--text); border: 2px solid var(--surface2); padding: 5px 8px; cursor: pointer; }
+.theme-switch button.on { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }

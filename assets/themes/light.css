@@ -1,0 +1,50 @@
+/* Вариант «Светлый подарок»: светлый кремовый фон, коралловый и фиолетовый, конфетти. Самый «для всех». */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
+:root {
+  --bg: #FFF8EE;
+  --surface: #FFFFFF;
+  --surface2: #F1E3CF;
+  --yellow: #FF8A5B;
+  --rust: #6C5CE7;
+  --moss: #1FA971;
+  --text: #2B1D2E;
+  --muted: #7A6E80;
+  --ink: #2B1D2E;
+  --mono: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+  color-scheme: light;
+}
+body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(rgba(255, 138, 91, .22) 2px, transparent 2.6px),
+    radial-gradient(rgba(108, 92, 231, .16) 2px, transparent 2.6px),
+    radial-gradient(rgba(31, 169, 113, .16) 2px, transparent 2.6px);
+  background-size: 90px 90px, 130px 130px, 170px 170px;
+  background-position: 0 0, 40px 60px, 80px 20px;
+  font-size: 17px;
+}
+section.alt { background: #FFF1E2; }
+.nav { background: rgba(255, 248, 238, .94); backdrop-filter: blur(6px); }
+.panel, .price, .card, .pillar, .faq details, .moment, .hero-card, .tile, .hero-item { box-shadow: 0 6px 0 rgba(43, 29, 46, .06); }
+.btn { color: var(--text); border-color: var(--text); }
+.btn:hover { background: #FFE9DD; }
+.btn.primary { color: #FFFFFF; background: var(--yellow); border-color: var(--text); box-shadow: 6px 6px 0 var(--rust); }
+.btn.primary:hover { background: #FF7A45; }
+.btn.dark { background: var(--text); color: #FFFFFF; }
+.tag.on { color: #FFFFFF; }
+.chip { color: var(--rust); border-color: var(--rust); background: #EFEBFF; }
+.kicker { color: var(--rust); }
+.price .amount { color: var(--yellow); }
+.cta { background: linear-gradient(90deg, #FFB08A, #FF8A5B); color: var(--text); }
+.cta h2 { color: var(--text); }
+.pixel-frame { border-color: var(--text); background: var(--text); }
+.hud .dialog, .hud .score { color: #FFF4E0; }
+.hud .dialog b, .hud .score { color: #FFC857; }
+.compare td.us { background: rgba(255, 138, 91, .1); }
+.free-strip { background: #FFFFFF; }
+.logo { color: var(--text); }
+.logo canvas { background: #FFE9DD; }
+.select select option { background: #FFFFFF; }
+.stage { background-color: #FFFFFF; }
+.theme-switch { color: #FFF4E0; }
+.theme-switch button { color: #FFF4E0; }

@@ -1,0 +1,35 @@
+/* Вариант «Уютный вечер»: ночное небо, тёплое золото, розовый, звёзды. Тёплый и «подарочный». */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
+:root {
+  --bg: #141A33;
+  --surface: #1D2547;
+  --surface2: #303B6B;
+  --yellow: #FFC857;
+  --rust: #FF6F91;
+  --moss: #7FD8BE;
+  --text: #FFF4E0;
+  --muted: #AEB5DA;
+  --ink: #0B0F22;
+  --mono: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+}
+body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(rgba(255, 244, 224, .55) 1px, transparent 1.6px),
+    radial-gradient(rgba(255, 200, 87, .35) 1px, transparent 1.6px);
+  background-size: 64px 64px, 128px 128px;
+  background-position: 0 0, 32px 44px;
+  font-size: 17px;
+}
+section.alt { background: linear-gradient(180deg, #1A2142, #1D2547); }
+.nav { background: rgba(20, 26, 51, .92); backdrop-filter: blur(6px); }
+.btn { border-radius: 0; }
+.btn.primary { box-shadow: 6px 6px 0 var(--rust); }
+.kicker { color: var(--rust); }
+.chip { color: var(--yellow); border-color: var(--yellow); background: rgba(255, 200, 87, .08); }
+.perks { color: var(--moss); }
+.price.hit { background: linear-gradient(180deg, #232C55, #1D2547); }
+.cta { background: linear-gradient(90deg, #FFC857, #FF9E7A); }
+.pixel-frame { box-shadow: 6px 6px 0 var(--rust), 0 0 40px rgba(255, 200, 87, .15); }
+.free-strip { border-color: var(--moss); }
+.what h2 .yellow { text-shadow: 0 0 18px rgba(255, 200, 87, .45); }
