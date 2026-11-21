@@ -13,7 +13,7 @@
   window.PH = { store, heroes };
 
   // ---------- темы оформления ----------
-  // Сайт всегда в «Ретро-приставке» (assets/themes/retro.css подключён в <head> каждой страницы).
+  // Сайт всегда в «Ретро-приставке» (assets/retro.css подключён в <head> каждой страницы), другого стиля у сайта нет.
   // Страница-подарок может быть в любой теме, которую выбрал клиент (PH.applyTheme).
   const THEMES = {
     retro: { name: 'Ретро-приставка', logo: 'controller', swatch: ['#101018', '#E63946', '#F4C430'] },
@@ -25,19 +25,23 @@
   };
   const appSrc = (document.currentScript && document.currentScript.src) || location.href;
   let siteTheme = 'retro';
-  function applyTheme(name) {
+  // Только для страницы-подарка (gift.html): тема, которую выбрал клиент.
+  // retro — стиль сайта как есть; goblin — базовые цвета style.css; остальные — assets/gift-themes/*.css
+  function applyGiftTheme(name) {
     if (!THEMES[name]) name = 'retro';
-    let l = document.getElementById('site-theme');
-    if (name === 'goblin') { if (l) l.disabled = true; }
+    const site = document.getElementById('site-theme');
+    let gl = document.getElementById('gift-theme');
+    if (site) site.disabled = name !== 'retro';
+    if (name === 'retro' || name === 'goblin') { if (gl) gl.remove(); }
     else {
-      if (!l) { l = document.createElement('link'); l.id = 'site-theme'; l.rel = 'stylesheet'; document.head.appendChild(l); }
-      l.disabled = false; l.href = new URL('themes/' + name + '.css?v=2', appSrc).href;
+      if (!gl) { gl = document.createElement('link'); gl.id = 'gift-theme'; gl.rel = 'stylesheet'; document.head.appendChild(gl); }
+      gl.href = new URL('gift-themes/' + name + '.css?v=3', appSrc).href;
     }
-    siteTheme = name; window.PH.siteTheme = name; document.documentElement.dataset.siteTheme = name;
+    siteTheme = name; window.PH.siteTheme = name; document.documentElement.dataset.giftTheme = name;
     document.querySelectorAll('.logo canvas[data-icon]').forEach(c => { c.dataset.icon = THEMES[name].logo; if (window.PX) PX.drawIcon(c, c.dataset.icon, false); });
   }
   window.PH.THEMES = THEMES;
-  window.PH.applyTheme = applyTheme;
+  window.PH.applyGiftTheme = applyGiftTheme;
   window.PH.siteTheme = siteTheme;
 
   // ---------- иконки и персонажи в разметке ----------
