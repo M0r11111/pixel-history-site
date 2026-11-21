@@ -105,9 +105,13 @@
     const strip = document.createElement('div'); strip.className = 'dev-strip';
     strip.innerHTML = '<b>ПРОЕКТ В РАЗРАБОТКЕ</b>Создание игр пока не работает — можно поиграть в демо и собрать героев.<a data-dev>Подробнее</a>';
     const nav = document.querySelector('header.nav'); if (nav) nav.after(strip); else document.body.prepend(strip);
-    // кнопки, которые запускают создание или заказ игры, пока показывают окно
+    // Где запущен наш сервер (локально или на ps.kz) — сайт работает полностью: плашку убираем, кнопки не блокируем.
+    let serverOk = false;
+    fetch(location.origin + '/api/health', { cache: 'no-store', credentials: 'same-origin' })
+      .then(r => r.ok ? r.json() : null).then(j => { if (j && j.ok) { serverOk = true; strip.remove(); } }).catch(() => {});
+    // кнопки, которые запускают создание или заказ игры, без сервера показывают окно
     document.addEventListener('click', e => {
-      if (e.target.closest('#go, [data-dev]')) { e.preventDefault(); e.stopPropagation(); devNotice(); }
+      if (!serverOk && e.target.closest('#go, [data-dev]')) { e.preventDefault(); e.stopPropagation(); devNotice(); }
     }, true);
   });
 

@@ -27,6 +27,20 @@
 
     <div id="offline" class="dev-note" hidden>Вход работает, когда сайт открыт через сервер (см. ЗАПУСК.md).</div>
 
+    <div class="tags" data-single id="mode" style="justify-content:center"><span class="tag on" data-v="code">По коду</span><span class="tag" data-v="password">По паролю</span></div>
+
+    <div id="pwBox" hidden style="display:grid;gap:14px">
+      <input class="field" id="pwLogin" autocomplete="username" placeholder="Почта или телефон">
+      <div style="display:flex;gap:8px"><input class="field" id="pwPass" type="password" autocomplete="current-password" placeholder="Пароль" style="flex:1;min-width:0"><button class="btn" type="button" id="pwEye" title="Показать пароль">👁</button></div>
+      <div id="pw2fa" hidden style="display:grid;gap:10px">
+        <p class="small">Это аккаунт администратора — для защиты нужен ещё код. Мы отправили его на <b class="yellow" id="pw2To"></b>.</p>
+        <div class="dev-note" id="pwDev" hidden></div>
+        <input class="field code-input" id="pwCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••">
+      </div>
+      <button class="btn primary block" id="pwGo">Войти</button>
+      <p class="muted small" style="text-align:center">Забыли пароль или ещё не задали? Войдите по коду — и задайте пароль в личном кабинете.</p>
+    </div>
+
     <div id="step1" style="display:grid;gap:14px">
       <div class="tags" data-single id="channel"><span class="tag on" data-v="phone">Телефон</span><span class="tag" data-v="email">Почта</span></div>
       <input class="field" id="target" inputmode="tel" autocomplete="tel" placeholder="+7 700 000 00 00">
@@ -51,7 +65,7 @@
 </main>
 
 <script src="assets/pixel.js?v=19"></script>
-<script src="assets/app.js?v=17"></script>
+<script src="assets/app.js?v=18"></script>
 <script src="assets/api.js?v=15"></script>
 <script>
 const $ = s => document.querySelector(s);
@@ -87,13 +101,36 @@ async function verify() {
   catch (e) { $('#err').textContent = e.message; }
 }
 $('#send').onclick = send; $('#resend').onclick = send; $('#verify').onclick = verify;
+
+// ---------- вход по паролю ----------
+$('#mode').addEventListener('pick', e => {
+  const pw = e.detail === 'password'; $('#err').textContent = '';
+  $('#pwBox').hidden = !pw; $('#step1').hidden = pw; $('#step2').hidden = true;
+  (pw ? $('#pwLogin') : $('#target')).focus();
+});
+$('#pwEye').onclick = () => { const i = $('#pwPass'); i.type = i.type === 'password' ? 'text' : 'password'; };
+async function pwLogin() {
+  $('#err').textContent = ''; const b = $('#pwGo'); b.disabled = true;
+  try {
+    const r = await PHAPI.api('/api/auth/password/login', { method: 'POST', body: { login: $('#pwLogin').value, password: $('#pwPass').value, code: $('#pwCode').value } });
+    if (r.need_code) {
+      $('#pw2fa').hidden = false; $('#pw2To').textContent = r.to; $('#pwDev').hidden = !r.dev_code;
+      if (r.dev_code) $('#pwDev').textContent = 'Режим разработки: почта не подключена. Код: ' + r.dev_code;
+      $('#pwCode').focus(); return;
+    }
+    location.href = next;
+  } catch (e) { $('#err').textContent = e.message; }
+  finally { b.disabled = false; }
+}
+$('#pwGo').onclick = pwLogin;
+['#pwLogin', '#pwPass', '#pwCode'].forEach(s => $(s).addEventListener('keydown', e => { if (e.key === 'Enter') pwLogin(); }));
 $('#target').addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
 $('#code').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, ''); if (e.target.value.length === 6) verify(); });
 $('#change').onclick = e => { e.preventDefault(); $('#step2').hidden = true; $('#step1').hidden = false; };
 
 const ALL = [['google', 'Google'], ['vk', 'ВКонтакте'], ['facebook', 'Facebook'], ['x', 'X (Twitter)']];
 (async () => {
-  if (!(await PHAPI.serverUp())) { $('#offline').hidden = false; $('#step1').hidden = true; return; }
+  if (!(await PHAPI.serverUp())) { $('#offline').hidden = false; $('#step1').hidden = true; $('#mode').hidden = true; return; }
   if (await PHAPI.me()) { location.href = next; return; }
   const { oauth } = await PHAPI.api('/api/auth/providers');
   const on = new Set(oauth.map(p => p.id));

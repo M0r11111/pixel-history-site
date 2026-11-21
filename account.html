@@ -35,6 +35,14 @@
     </section>
 
     <aside style="display:grid;gap:20px">
+      <div class="panel hot" style="display:grid;gap:12px" id="wallet">
+        <h3>Баланс</h3>
+        <div class="px yellow" style="font-size:22px" id="bal">—</div>
+        <button class="btn primary block" id="topup">Пополнить</button>
+        <p class="muted small">Пополните заранее — и игры будут оплачиваться в один клик. Пока принимаем Kaspi, карты — скоро.</p>
+        <div id="history" style="display:grid;gap:8px"></div>
+      </div>
+
       <div class="panel" style="display:grid;gap:14px">
         <h3>Профиль</h3>
         <div class="opt-group"><b>Имя</b><div style="display:flex;gap:8px"><input class="field" id="name" maxlength="80" style="padding:10px"><button class="btn" id="saveName">OK</button></div></div>
@@ -55,8 +63,18 @@
         <div class="social" id="linkSocial"></div>
       </div>
 
-      <div class="panel" style="display:grid;gap:10px">
+      <div class="panel" style="display:grid;gap:12px">
         <h3>Безопасность</h3>
+        <div class="sum-row"><span>Пароль</span><span id="pwState">—</span></div>
+        <div style="display:grid;gap:8px">
+          <input class="field" id="pwCur" type="password" autocomplete="current-password" placeholder="Текущий пароль" style="padding:10px">
+          <input class="field" id="pwNew" type="password" autocomplete="new-password" placeholder="Новый пароль (от 10 символов)" style="padding:10px">
+          <input class="field" id="pwNew2" type="password" autocomplete="new-password" placeholder="Повторите новый пароль" style="padding:10px">
+          <button class="btn" id="pwSave">Сохранить пароль</button>
+          <p class="muted small" id="pwHint">Логин — ваша почта или телефон. После смены пароля другие устройства выйдут из аккаунта.</p>
+        </div>
+        <b class="small">Где вы вошли</b>
+        <div id="sessions" style="display:grid;gap:6px"></div>
         <button class="btn block" id="logout">Выйти</button>
         <button class="btn block" id="logoutAll">Выйти на всех устройствах</button>
         <button class="btn block" id="del" style="border-color:var(--rust);color:var(--rust)">Удалить аккаунт</button>
@@ -66,8 +84,9 @@
 </main>
 
 <script src="assets/pixel.js?v=19"></script>
-<script src="assets/app.js?v=17"></script>
+<script src="assets/app.js?v=18"></script>
 <script src="assets/api.js?v=15"></script>
+<script src="assets/pay.js?v=1"></script>
 <script>
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -84,7 +103,30 @@ function renderMe() {
   if (me.email) ids.unshift(`<div class="sum-row"><span>Код на почту</span><span>${esc(me.email)}</span></div>`);
   if (me.phone) ids.unshift(`<div class="sum-row"><span>SMS-код</span><span>${esc(me.phone)}</span></div>`);
   $('#identities').innerHTML = ids.join('') || '<p class="muted small">Нет привязок</p>';
+  $('#pwState').textContent = me.has_password ? 'задан' + (me.password_set_at ? ' ' + new Date(me.password_set_at + 'Z').toLocaleDateString('ru-RU') : '') : 'не задан';
+  $('#pwCur').hidden = !me.has_password;
+  $('#pwSave').textContent = me.has_password ? 'Сменить пароль' : 'Задать пароль';
 }
+
+// ---------- пароль и устройства ----------
+async function loadSessions() {
+  const list = await PHAPI.api('/api/me/sessions');
+  $('#sessions').innerHTML = list.map(s => `<div class="sum-row"><span>${esc(s.device)}<br><small class="muted">${esc(s.ip || '')} · ${new Date(s.created_at + 'Z').toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</small></span><span>${s.current ? '<small class="moss">это устройство</small>' : `<a href="#" class="muted small" data-end="${s.id}">завершить</a>`}</span></div>`).join('');
+}
+$('#sessions').addEventListener('click', async e => {
+  const x = e.target.closest('[data-end]'); if (!x) return; e.preventDefault();
+  await PHAPI.api('/api/me/sessions/' + x.dataset.end, { method: 'DELETE' }); loadSessions();
+});
+$('#pwSave').onclick = async () => {
+  const hint = $('#pwHint');
+  if ($('#pwNew').value !== $('#pwNew2').value) { hint.textContent = 'Пароли не совпадают'; hint.className = 'err'; return; }
+  try {
+    me = await PHAPI.api('/api/me/password', { method: 'POST', body: { current_password: $('#pwCur').value, new_password: $('#pwNew').value } });
+    ['#pwCur', '#pwNew', '#pwNew2'].forEach(s => $(s).value = '');
+    hint.className = 'moss small'; hint.textContent = '✓ Пароль сохранён. Другие устройства вышли из аккаунта.';
+    renderMe(); loadSessions();
+  } catch (e) { hint.className = 'err'; hint.textContent = e.message; }
+};
 
 function badge(g) {
   const cls = g.status === 'ready' ? 'ready' : (g.status === 'failed' || g.status === 'blocked') ? 'bad' : 'work';
@@ -93,28 +135,63 @@ function badge(g) {
 async function loadGames() {
   const games = await PHAPI.api('/api/games');
   const box = $('#games');
-  if (!games.length) { box.innerHTML = '<div class="panel" style="text-align:center;display:grid;gap:14px;justify-items:center"><canvas data-icon="gift" data-outline style="width:80px"></canvas><p class="muted">Пока нет игр. Сделайте первую — превью бесплатно.</p><a class="btn primary" href="create.html?new=1">Создать игру</a></div>'; PH.paint(box); return; }
+  if (!games.length) { box.innerHTML = '<div class="panel" style="text-align:center;display:grid;gap:14px;justify-items:center"><canvas data-icon="gift" data-outline style="width:80px"></canvas><p class="muted">Пока нет игр. Сделайте первую — это пара минут.</p><a class="btn primary" href="create.html?new=1">Создать игру</a></div>'; PH.paint(box); return; }
   box.innerHTML = games.map(g => `<div class="game-row">
     <div><h4>${esc(g.title)}</h4>
-      <div class="meta">${badge(g)}${g.mode === 'human' ? 'Делает человек' : 'Делает ИИ'} · ${fmt(g.price_kzt)} · ${g.paid ? '<span class="moss">оплачено</span>' : 'не оплачено'}${g.levels ? ' · ' + g.levels + ' ур.' : ''}${g.views ? ' · открыли ' + g.views + ' раз' : ''}</div>
+      <div class="meta">${badge(g)}${g.mode === 'human' ? 'Делает человек' : 'Делает ИИ'} · ${fmt(g.price_kzt)} · ${g.due_kzt > 0 ? (g.paid_kzt ? 'доплата ' + fmt(g.due_kzt) : 'не оплачено') : '<span class="moss">оплачено</span>'}${g.levels ? ' · ' + g.levels + ' гл.' : ''}${g.views ? ' · открыли ' + g.views + ' раз' : ''}</div>
       ${g.status === 'generating' ? `<div class="mini-bar"><i style="width:${g.progress}%"></i></div><div class="meta">${esc(g.stage)}</div>` : ''}
       ${g.error ? `<div class="err">${esc(g.error)}</div>` : ''}
       ${g.url ? `<div class="meta" style="margin-top:6px">Ссылка: <a class="yellow" href="${esc(g.url)}" target="_blank">${esc(g.url)}</a></div>` : ''}
     </div>
     <div class="acts">
+      ${g.due_kzt > 0 && (g.status === 'draft' || g.status === 'failed') ? `<button class="btn primary" data-pay="${g.id}">Оплатить и создать</button>` : ''}
       ${g.status === 'ready' ? `<a class="btn" href="play.html?id=${g.id}">Играть</a>` : ''}
       ${g.url ? `<button class="btn" data-copy="${esc(g.url)}">Копировать</button>` : ''}
       <a class="btn ${g.status === 'ready' && !g.url ? 'primary' : ''}" href="create.html?game=${g.id}">${g.status === 'ready' ? (g.url ? 'Изменить' : 'Подарить') : g.status === 'draft' || g.status === 'failed' ? 'Продолжить' : 'Открыть'}</a>
       <button class="btn" data-del="${g.id}" title="Удалить">✕</button>
     </div></div>`).join('');
   clearTimeout(pollT);
+  window.__games = games;
   if (games.some(g => g.status === 'generating')) pollT = setTimeout(loadGames, 2500);
 }
 
+// ---------- баланс и история оплат ----------
+const PST = { pending: 'ожидает оплаты', claimed: 'проверяем', paid: 'оплачено', rejected: 'не найдена', cancelled: 'отменена' };
+const dts = s => new Date(s + (s.endsWith('Z') ? '' : 'Z')).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+async function loadWallet() {
+  const b = await PHAPI.api('/api/billing');
+  $('#bal').textContent = fmt(b.balance);
+  const open = b.payments.filter(p => p.status === 'pending' || p.status === 'claimed');
+  const rows = [
+    ...open.map(p => `<div class="sum-row"><span>${esc(p.purpose_ru)}<br><small class="muted">${esc(p.code)} · ${PST[p.status]}</small></span><span>${fmt(p.amount_kzt)}<br><a href="#" class="muted small" data-cancel="${p.id}">отменить</a></span></div>`),
+    ...b.transactions.slice(0, 8).map(t => `<div class="sum-row"><span>${esc(t.note || t.kind_ru)}<br><small class="muted">${dts(t.created_at)}</small></span><span class="${t.amount_kzt > 0 ? 'moss' : ''}">${t.amount_kzt > 0 ? '+' : '−'}${fmt(Math.abs(t.amount_kzt))}</span></div>`)];
+  $('#history').innerHTML = rows.length ? '<b class="small">История</b>' + rows.join('') : '';
+  clearTimeout(window.__walletT);
+  if (open.some(p => p.status === 'claimed')) window.__walletT = setTimeout(() => { loadWallet(); loadGames(); }, 5000);
+}
+$('#topup').onclick = () => PHPay.topup().then(loadWallet, () => loadWallet());
+$('#history').addEventListener('click', async e => {
+  const c = e.target.closest('[data-cancel]'); if (!c) return; e.preventDefault();
+  if (confirm('Отменить этот счёт?')) { await PHAPI.api('/api/payments/' + c.dataset.cancel + '/cancel', { method: 'POST' }); loadWallet(); }
+});
+
 $('#games').addEventListener('click', async e => {
+  const pay = e.target.closest('[data-pay]');
+  if (pay) {
+    const g = (window.__games || []).find(x => x.id === pay.dataset.pay);
+    try {
+      const r = await PHPay.payGame(g);
+      if (r.via !== 'kaspi') await PHAPI.api('/api/games/' + g.id + '/generate', { method: 'POST' });
+    } catch (er) { if (!er.cancelled && !er.pending) alert(er.message); }
+    loadGames(); loadWallet(); return;
+  }
   const c = e.target.closest('[data-copy]'), d = e.target.closest('[data-del]');
   if (c) { navigator.clipboard && navigator.clipboard.writeText(c.dataset.copy); c.textContent = 'Готово ✓'; }
-  if (d && confirm('Удалить игру? Ссылка-подарок перестанет работать.')) { await PHAPI.api('/api/games/' + d.dataset.del, { method: 'DELETE' }); loadGames(); }
+  if (d && confirm('Удалить игру? Ссылка-подарок перестанет работать.')) {
+    const r = await PHAPI.api('/api/games/' + d.dataset.del, { method: 'DELETE' });
+    if (r.refunded_kzt) alert('Игра не была создана — ' + fmt(r.refunded_kzt) + ' вернулись на баланс.');
+    loadGames(); loadWallet();
+  }
 });
 $('#saveName').onclick = async () => { try { me = await PHAPI.api('/api/me', { method: 'PATCH', body: { name: $('#name').value } }); renderMe(); } catch (e) { $('#profErr').textContent = e.message; } };
 $('#linkCh').addEventListener('pick', e => { linkCh = e.detail; $('#linkTarget').placeholder = linkCh === 'email' ? 'you@mail.kz' : '+7 700 000 00 00'; });
@@ -142,7 +219,7 @@ $('#del').onclick = async () => {
   if (!(await PHAPI.serverUp())) { $('#hello').textContent = 'Кабинет работает, когда сайт открыт через сервер'; return; }
   me = await PHAPI.me();
   if (!me) { location.href = PHAPI.loginUrl(); return; }
-  renderMe(); loadGames();
+  renderMe(); loadGames(); loadWallet(); loadSessions();
   const { oauth } = await PHAPI.api('/api/auth/providers');
   $('#linkSocial').innerHTML = oauth.filter(p => p.id !== 'telegram' && !me.identities.some(i => i.provider === p.id))
     .map(p => `<a class="btn" href="/api/auth/oauth/${p.id}/start?link=1&next=/account.html">+ ${esc(p.name)}</a>`).join('');

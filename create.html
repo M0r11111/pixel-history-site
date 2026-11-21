@@ -38,7 +38,7 @@
       <div class="panel">
         <div class="panel-head"><span class="n">00</span><h3>Кто делает игру</h3></div>
         <div class="mode-switch" id="mode" style="margin-bottom:18px">
-          <button class="on" data-m="ai"><b>Делает ИИ</b><span>~5 минут · превью бесплатно</span></button>
+          <button class="on" data-m="ai"><b>Делает ИИ</b><span>~5 минут · дешевле</span></button>
           <button data-m="human"><b>Делает человек</b><span>художник и сценарист · 3–5 дней</span></button>
         </div>
         <div class="opt-group"><b>Тариф</b>
@@ -170,8 +170,9 @@
 <div class="modal" id="soon"><div class="panel hot"><h3>Скоро</h3><p class="muted small">Это прототип сайта — эта кнопка заработает, когда подключим генерацию игр.</p><button class="btn" data-close>Понятно</button></div></div>
 
 <script src="assets/pixel.js?v=19"></script>
-<script src="assets/app.js?v=17"></script>
+<script src="assets/app.js?v=18"></script>
 <script src="assets/api.js?v=15"></script>
+<script src="assets/pay.js?v=1"></script>
 <script src="game/scenes.js?v=1"></script>
 <script src="game/engine.js?v=21"></script>
 <script>
@@ -295,9 +296,9 @@ function summary() {
   $('#summary').innerHTML = rows.map(([a, b]) => `<div class="sum-row"><span>${a}</span><span>${b}</span></div>`).join('');
   $('#planName').textContent = '«' + p.name + '»';
   $('#total').textContent = fmt(total);
-  $('#planInfo').textContent = `До ${p.heroes} героев и ${p.levels} глав, ${p.time}.` + (state.mode === 'human' ? ' Портретное сходство по фото, сюжет пишет сценарист.' : ' Превью бесплатно — платите, если понравится.');
+  $('#planInfo').textContent = `До ${p.heroes} героев и ${p.levels} глав, ${p.time}.` + (state.mode === 'human' ? ' Портретное сходство по фото, сюжет пишет сценарист.' : ' Не понравится — пересоздадите бесплатно (до ' + ({ mini: 3, duo: 10, crew: 20 }[state.plan] || 3) + ' раз).');
   $('#go').textContent = state.mode === 'ai' ? 'Создать игру' : 'Заказать у художника';
-  $('#goNote').textContent = state.mode === 'ai' ? 'Сначала бесплатное превью, оплата — потом.' : 'Предоплата 50%, остаток — после превью.';
+  $('#goNote').textContent = state.mode === 'ai' ? 'Оплата перед созданием: с баланса или через Kaspi.' : 'Оплата перед началом работы: с баланса или через Kaspi.';
 }
 
 // превью-сцена
@@ -469,6 +470,14 @@ renderHeroes(); renderMoments(); setMode(state.mode);
     } catch (e) { serverId = null; history.replaceState(null, '', 'create.html'); }
   }
 
+  // куда отправить клиента по статусу игры
+  function route(g) {
+    if (g.status.startsWith('human_')) show('human');
+    else if (g.status === 'ready') showServerReady(g);
+    else if (g.status === 'generating') { show('gen'); pollGen(); }
+    else if (g.status === 'failed') { show('builder'); $('#goNote').textContent = 'Не получилось собрать игру: ' + (g.error || 'ошибка') + '. Нажмите ещё раз — это бесплатно.'; }
+  }
+
   $('#go').onclick = async () => {
     const me = await PHAPI.me();
     if (!me) { try { PH.store.set('builder', snapshot()); } catch (e) {} location.href = '/login.html?next=' + encodeURIComponent('/create.html'); return; }
@@ -477,9 +486,16 @@ renderHeroes(); renderMoments(); setMode(state.mode);
       const body = { mode: state.mode, plan: state.plan, input: toInput() };
       const g = serverId ? await PHAPI.api('/api/games/' + serverId, { method: 'PUT', body }) : await PHAPI.api('/api/games', { method: 'POST', body });
       serverId = g.id; history.replaceState(null, '', 'create.html?game=' + g.id); PH.store.set('heroes_game', g.id);
-      const r = await PHAPI.api('/api/games/' + g.id + '/generate', { method: 'POST' });
-      if (r.status === 'human_queue') { show('human'); return; }
-      show('gen'); pollGen();
+      // оплата сразу после нажатия: с баланса или Kaspi (позже — картой)
+      let paid;
+      try { paid = await PHPay.payGame(g); }
+      catch (e) {
+        if (e.pending) $('#goNote').textContent = 'Оплата проверяется. Как только подтвердим, игра начнёт создаваться сама — следите в личном кабинете.';
+        else if (!e.cancelled) alert(e.message);
+        return;
+      }
+      if (paid.via === 'kaspi') { route(await PHAPI.api('/api/games/' + g.id)); return; }   // сервер уже запустил игру сам
+      route(await PHAPI.api('/api/games/' + g.id + '/generate', { method: 'POST' }));
     } catch (e) { alert(e.message); }
     finally { btn.disabled = false; }
   };
