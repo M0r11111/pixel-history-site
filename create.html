@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=7">
+<link rel="stylesheet" href="assets/style.css?v=8">
 </head>
 <body>
 <header class="nav">
@@ -164,10 +164,10 @@
 
 <div class="modal" id="soon"><div class="panel hot"><h3>Скоро</h3><p class="muted small">Это прототип сайта — эта кнопка заработает, когда подключим генерацию игр.</p><button class="btn" data-close>Понятно</button></div></div>
 
-<script src="assets/pixel.js?v=7"></script>
-<script src="assets/app.js?v=7"></script>
-<script src="assets/api.js?v=7"></script>
-<script src="game/engine.js?v=7"></script>
+<script src="assets/pixel.js?v=8"></script>
+<script src="assets/app.js?v=8"></script>
+<script src="assets/api.js?v=8"></script>
+<script src="game/engine.js?v=8"></script>
 <script>
 const $ = s => document.querySelector(s);
 const PLANS = {
@@ -292,7 +292,7 @@ function summary() {
 function titleScreen(ctx, t, withTitle) {
   PX.drawScene(ctx, 10, t);
   const hs = state.heroes.slice(0, 4);
-  hs.forEach((h, i) => PX.drawChar(ctx, h, 3, 330 - hs.length * 30 + i * 62, 190 + (i % 2 ? -1 : 1) * Math.round(Math.sin(t / 300))));
+  hs.forEach((h, i) => PX.drawAnim(ctx, 'idle', h, null, t + i * 500, 3, 360 - hs.length * 34 + i * 68, 278, { flip: i % 2 === 1 }));
   if (withTitle) {
     ctx.fillStyle = 'rgba(18,21,14,.72)'; ctx.fillRect(0, 36, 640, 150);
     ctx.textAlign = 'center'; ctx.fillStyle = '#D4B95E'; ctx.font = '26px "Press Start 2P"';

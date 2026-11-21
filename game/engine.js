@@ -84,7 +84,7 @@ function PHEngineFactory(global) {
         if (v < 0.5) gy = clamp(gy + (r() < 0.5 ? -1 : 1) * (1 + Math.floor(r() * 2)), 11, 15);
         const sw = 5 + Math.floor(r() * 7), start = x;
         for (let i = 0; i < sw && x < len - 14; i++) ground[x++] = gy;
-        if (r() < 0.4 && x - start >= 4) plats.push({ x: start + 1, y: gy - 4, w: 3 + Math.floor(r() * 2) });
+        if (r() < 0.4 && x - start >= 4) plats.push({ x: start + 1, y: gy - 5, w: 3 + Math.floor(r() * 2) });
       }
     }
     for (let i = len - 14; i < len; i++) ground[i] = ground[len - 15] !== null ? ground[len - 15] : gy;
@@ -95,7 +95,7 @@ function PHEngineFactory(global) {
       const plat = plats.find(p => mx >= p.x && mx < p.x + p.w);
       const surf = plat ? plat.y : ground[mx];
       const high = !plat && r() < 0.4;
-      return { x: mx * T + T / 2, y: surf * T - (high ? 78 : 40), text: m.text || m, who: m.who, got: false };
+      return { x: mx * T + T / 2, y: surf * T - (high ? 96 : 46), text: m.text || m, who: m.who, got: false };
     });
     // декорации
     const theme = THEMES[L.theme] || THEMES.forest, deco = [];
@@ -189,12 +189,12 @@ function PHEngineFactory(global) {
   function heroGrid(h) { const k = JSON.stringify(h); if (!gridCache.has(k)) gridCache.set(k, PX.charGrid(h, 'front')); return gridCache.get(k); }
   // герой в позе: x — центр, footY — линия земли
   function drawHero(ctx, h, x, footY, s, flip, bob, shadow, view, pose) {
-    PX.drawPose(ctx, h, s, Math.round(x - 10 * s), Math.round(footY - 27 * s + (bob || 0)), view || 'front', pose || null, flip, shadow);
+    PX.drawPose(ctx, h, s, Math.round(x - PX.CX * s), Math.round(footY - PX.FOOT * s + (bob || 0)), view || 'front', pose || null, flip, shadow);
   }
   function emoteOf(h, kinds) { return (h.emotes || []).find(id => PX.ANIMS[id] && kinds.includes(PX.ANIMS[id].kind)); }
   function drawHead(ctx, h, x, y, s) {
     const g = heroGrid(h);
-    for (const k in g) { const i = k.indexOf(','); const gx = +k.slice(0, i), gy = +k.slice(i + 1); if (gy <= 12) { ctx.fillStyle = g[k]; ctx.fillRect(x + gx * s, y + gy * s, s, s); } }
+    for (const k in g) { const i = k.indexOf(','); const gx = +k.slice(0, i), gy = +k.slice(i + 1); if (gy <= 17) { ctx.fillStyle = g[k]; ctx.fillRect(x + gx * s, y + gy * s, s, s); } }
   }
   function drawMemory(ctx, x, y, t) {
     const b = Math.round(Math.sin(t / 250) * 3);
@@ -252,7 +252,7 @@ function PHEngineFactory(global) {
 
     // состояние
     let state = game.card ? 'card' : 'title', li = 0, lv = null, cam = 0, collected = 0, banner = 0, dlg = null, t = 0, finaleChars = 0;
-    const pl = { x: 0, y: 0, vx: 0, vy: 0, w: 22, h: 54, on: false, flip: false, safeX: 0, walk: 0 };
+    const pl = { x: 0, y: 0, vx: 0, vy: 0, w: 24, h: 66, on: false, flip: false, safeX: 0, walk: 0 };
 
     function say(lines, done) { dlg = { lines: lines.filter(l => l && l.text), i: 0, chars: 0, done }; if (!dlg.lines.length) { dlg = null; done && done(); } }
     function who(id) { if (id === 'memory') return { name: 'ВОСПОМИНАНИЕ' }; return heroes[id] || null; }
@@ -284,7 +284,7 @@ function PHEngineFactory(global) {
       const acc = 0.6, max = 2.8;
       if (keys.left) { pl.vx = Math.max(pl.vx - acc, -max); pl.flip = true; } else if (keys.right) { pl.vx = Math.min(pl.vx + acc, max); pl.flip = false; } else pl.vx *= 0.7;
       if (Math.abs(pl.vx) < 0.05) pl.vx = 0;
-      if (jumpPressed && pl.on) { pl.vy = -9.6; pl.on = false; sound.jump(); }
+      if (jumpPressed && pl.on) { pl.vy = -10.8; pl.on = false; sound.jump(); }
       if (!keys.jump && pl.vy < -3) pl.vy = -3; // короткий прыжок
       jumpPressed = actPressed = false;
       pl.vy = Math.min(pl.vy + 0.5, 12);
@@ -321,7 +321,7 @@ function PHEngineFactory(global) {
       const line = dlg.lines[dlg.i], h = who(line.who), x = 16, y = H - 108, w = W - 32;
       P(ctx, '#EDE4CF', x - 4, y - 4, w + 8, 100); P(ctx, '#12150E', x, y, w, 92);
       let tx = x + 16;
-      if (h && h.skin) { P(ctx, '#3B4630', x + 10, y + 10, 72, 72); drawHead(ctx, h, x + 16, y + 14, 3); tx = x + 96; }
+      if (h && h.skin) { P(ctx, '#3B4630', x + 10, y + 10, 72, 72); drawHead(ctx, h, x + 10, y + 12, 3); tx = x + 96; }
       ctx.textAlign = 'left'; ctx.textBaseline = 'top';
       if (h) { ctx.fillStyle = '#D4B95E'; ctx.font = '10px ' + FONT; ctx.fillText((h.name || '').toUpperCase() + ':', tx, y + 12); }
       ctx.fillStyle = '#EDE4CF'; ctx.font = '14px ' + MONO;
@@ -349,8 +349,8 @@ function PHEngineFactory(global) {
         const th = THEMES[levels[0] ? levels[0].theme : 'forest'];
         drawBackground(ctx, th, t / 15, t);
         for (let x = 0; x < W; x += T) { P(ctx, th.top, x, 280, T, 8); P(ctx, th.soil, x, 288, T, 72); }
-        drawHero(ctx, playerHero, W / 2 - 40, 280, 3, false, Math.round(Math.sin(t / 300) * 2));
-        drawHero(ctx, partnerHero, W / 2 + 40, 280, 3, true, Math.round(Math.cos(t / 300) * 2));
+        PX.drawAnim(ctx, 'idle', playerHero, null, t, 3, W / 2 - 44, 280);
+        PX.drawAnim(ctx, 'idle', partnerHero, null, t + 700, 3, W / 2 + 44, 280, { flip: true });
         worldEnd();
         P(ctx, 'rgba(18,21,14,.72)', 0, 34, W, 110);
         centerText((game.title || 'ИГРА').toUpperCase(), 62, game.title && game.title.length > 18 ? 16 : 24, '#D4B95E');
@@ -363,7 +363,7 @@ function PHEngineFactory(global) {
         for (let x = 0; x < W; x += T) { P(ctx, '#3E5E4A', x, 300, T, 8); P(ctx, '#2A2420', x, 308, T, 52); }
         const duo = emoteOf(playerHero, ['duo']) || emoteOf(partnerHero, ['duo']);
         if (duo) PX.drawAnim(ctx, duo, playerHero, partnerHero, t, 3, W / 2, 300);
-        else { drawHero(ctx, playerHero, W / 2 - 30, 300, 3, false); drawHero(ctx, partnerHero, W / 2 + 30, 300, 3, true); }
+        else { PX.drawAnim(ctx, 'idle', playerHero, null, t, 3, W / 2 - 40, 300); PX.drawAnim(ctx, 'idle', partnerHero, null, t + 700, 3, W / 2 + 40, 300, { flip: true }); }
         for (let i = 0; i < 12; i++) { const hx = (i * 61 + t / 20) % W, hy = (i * 37 + t / 15) % 300; P(ctx, '#C0593A', hx, hy, 6, 6); }
         worldEnd();
         const F = game.finale || {};
@@ -392,13 +392,15 @@ function PHEngineFactory(global) {
       // партнёр ждёт в конце уровня; при встрече — его эмоция
       const greet = state === 'outro' && (emoteOf(partnerHero, ['emote']) || 'wave');
       if (greet) PX.drawAnim(ctx, greet, partnerHero, null, t, 2, lv.goalX - cam, gsy, { flip: true });
-      else drawHero(ctx, partnerHero, lv.goalX - cam, gsy, 2, true, Math.round(Math.sin(t / 300)), true, 'side', {});
-      if (state === 'play' && Math.floor(t / 400) % 2) { P(ctx, '#D4B95E', lv.goalX - cam - 4, gsy - 80, 8, 8); }
+      else PX.drawAnim(ctx, 'idle', partnerHero, null, t, 2, lv.goalX - cam, gsy, { flip: true });
+      if (state === 'play' && Math.floor(t / 400) % 2) { P(ctx, '#D4B95E', lv.goalX - cam - 4, gsy - 92, 8, 8); }
       lv.items.forEach(it => { if (!it.got && it.x - cam > -20 && it.x - cam < W + 20) drawMemory(ctx, it.x - cam, it.y, t); });
       // игрок: вид сбоку, выбранная походка
       const moving = Math.abs(pl.vx) > 0.3 && pl.on;
-      const pose = !pl.on ? { legs: 1, armF: 'up', armB: 'swingB' } : moving ? PX.animFrame(playerHero.walk || 'walk_normal', pl.walk * 22) : {};
-      drawHero(ctx, playerHero, pl.x + pl.w / 2 - cam, pl.y + pl.h, 2, pl.flip, 0, pl.on, 'side', pose);
+      // стоит — лицом к нам (дыхание, моргание); идёт — профиль с выбранной походкой; в воздухе — прыжок
+      const px = pl.x + pl.w / 2 - cam, py = pl.y + pl.h;
+      if (pl.on && !moving) PX.drawAnim(ctx, 'idle', playerHero, null, t, 2, px, py, { flip: pl.flip });
+      else drawHero(ctx, playerHero, px, py, 2, pl.flip, 0, pl.on, 'side', !pl.on ? { legs: 'jump', armF: 'up', armB: 'swingB' } : PX.animFrame(playerHero.walk || 'walk_normal', pl.walk * 18));
       if (lv.theme.fireflies) for (let i = 0; i < 10; i++) { if (Math.sin(t / 400 + i * 2) > 0) P(ctx, '#F2E3A0', (i * 113 - cam * 0.6 % W + W * 2) % W, 60 + (i * 47) % 160 + Math.sin(t / 600 + i) * 6, 3, 3); }
       if (lv.theme.snowfall) for (let i = 0; i < 40; i++) P(ctx, '#FFFFFF', (i * 71 + t / 30 * (1 + i % 3)) % W, (i * 43 + t / 12) % H, 3, 3);
       worldEnd();

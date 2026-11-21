@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=7">
+<link rel="stylesheet" href="assets/style.css?v=8">
 <style>
   .stage { background-color: var(--surface); }
   .stage canvas#stageCanvas { position: absolute; inset: 0; width: 100%; height: 100%; left: 0; bottom: 0; transform: none; }
@@ -15,6 +15,8 @@
   .stage .name, .stage .views { z-index: 2; }
   .tiles { grid-template-columns: repeat(4, 1fr); }
   .tile .thumb { width: 100%; max-width: 76px; }
+  .tile .thumb canvas { width: 88px; left: -6px; top: -4px; }
+  .hero-item .mini canvas { width: 66px; left: -9px; top: -3px; }
   .anim-tags .tag.on::before { content: '✓ '; }
   @media (max-width: 520px) { .tiles { grid-template-columns: repeat(3, 1fr); } }
 </style>
@@ -118,9 +120,9 @@
   </div>
 </main>
 
-<script src="assets/pixel.js?v=7"></script>
-<script src="assets/app.js?v=7"></script>
-<script src="assets/api.js?v=7"></script>
+<script src="assets/pixel.js?v=8"></script>
+<script src="assets/app.js?v=8"></script>
+<script src="assets/api.js?v=8"></script>
 <script>
 const PAL = {
   skin: ['#F3D3B5', '#F0CBA8', '#E8C39E', '#C99A6E', '#A0704A', '#7A4E30', '#4E3220'],
@@ -152,11 +154,12 @@ function drawStage(now) {
   sctx.fillStyle = '#5B7A3A'; sctx.fillRect(0, ground, W, 16);
   const shift = a && a.kind === 'walk' ? Math.floor(ms / 1000 * a.fps * 8) % 40 : 0;
   sctx.fillStyle = '#6E9145'; for (let x = -shift; x < W; x += 40) sctx.fillRect(x, ground - 6, 8, 6);
-  const s = Math.max(4, Math.floor(Math.min(W / 36, (ground - 20) / 33)));
+  const s = Math.max(4, Math.floor(Math.min(W / 44, (ground - 20) / 40)));
   if (a && a.kind === 'duo') PX.drawAnim(sctx, preview, cur, partnerOf(cur), ms, s, W / 2, ground);
-  else if (a && a.kind === 'walk') PX.drawPose(sctx, cur, s, Math.round(W / 2 - 10 * s), ground - 27 * s, 'side', PX.animFrame(preview, ms), false);
+  else if (a && a.kind === 'walk') PX.drawAnim(sctx, preview, cur, null, ms, s, W / 2, ground);
   else if (a) PX.drawAnim(sctx, preview, cur, null, ms, s, W / 2, ground);
-  else PX.drawPose(sctx, cur, s, Math.round(W / 2 - 10 * s), ground - 27 * s, view, { dy: Math.sin(now / 500) > 0.6 ? -1 : 0 }, false);
+  else if (view === 'front') PX.drawAnim(sctx, 'idle', cur, null, now, s, W / 2, ground);   // стоит: дышит и моргает
+  else PX.drawPose(sctx, cur, s, Math.round(W / 2 - PX.CX * s), ground - PX.FOOT * s, view, null, false);
   requestAnimationFrame(drawStage);
 }
 requestAnimationFrame(drawStage);
