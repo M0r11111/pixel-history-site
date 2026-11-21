@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=16">
+<link rel="stylesheet" href="assets/style.css?v=17">
 <link id="site-theme" rel="stylesheet" href="assets/retro.css?v=3">
 </head>
 <body>
@@ -75,7 +75,7 @@
       <!-- 3 моменты -->
       <div class="panel" id="p3">
         <div class="panel-head"><span class="n">03</span><h3>Моменты</h3></div>
-        <p class="muted small" style="margin-bottom:18px">Каждый момент станет уровнем игры. Добавьте фото реального места — по нему будет нарисована локация.</p>
+        <p class="muted small" style="margin-bottom:18px">Каждый момент станет главой игры. Добавьте фото реального места — по нему будет нарисована локация.</p>
         <div id="moments"></div>
         <button class="btn" id="addMoment">+ Добавить момент</button>
       </div>
@@ -161,7 +161,7 @@
     <div class="done"><b>[x]</b> Заявка и история получены</div>
     <div class="now"><b>[&gt;]</b> Менеджер уточняет детали — до 1 часа</div>
     <div><b>[ ]</b> Эскизы героев — 1 день</div>
-    <div><b>[ ]</b> Уровни и сюжет — 2–3 дня</div>
+    <div><b>[ ]</b> Главы и сюжет — 2–3 дня</div>
     <div><b>[ ]</b> Превью, правки и ссылка — 3–5 дней</div>
   </div>
   <a class="btn" href="index.html">На главную</a>
@@ -235,7 +235,7 @@ function renderMoments() {
   state.moments.forEach((m, i) => {
     const r = document.createElement('div'); r.className = 'moment';
     const last = i === state.moments.length - 1 && state.moments.length > 1;
-    r.innerHTML = `<span class="muted">≡</span><span class="lvl">${last ? 'ФИНАЛ' : 'УРОВЕНЬ ' + (i + 1)}</span><div style="flex:1;display:grid;min-width:0"><input><input class="sub"></div>
+    r.innerHTML = `<span class="muted">≡</span><span class="lvl">${last ? 'ФИНАЛ' : 'ГЛАВА ' + (i + 1)}</span><div style="flex:1;display:grid;min-width:0"><input><input class="sub"></div>
       <label class="photo-slot" title="Фото места: по нему будет нарисована локация">${m[2] ? `<img src="${m[2].pixel}" alt="">` : '<span>+ ФОТО</span>'}<input type="file" accept="image/*" hidden></label>
       <button class="del" title="Удалить">✕</button>`;
     const [a, b] = r.querySelectorAll('input:not([type=file])'); a.value = m[0]; b.value = m[1]; a.placeholder = 'Место или событие'; b.placeholder = 'Что там произошло';
@@ -290,12 +290,12 @@ function summary() {
   const P = PLANS[state.mode], p = P[state.plan];
   const extraH = Math.max(0, state.heroes.length - p.heroes), extraL = Math.max(0, state.moments.length - p.levels);
   const total = p.price + (extraH + extraL) * P.extra;
-  const rows = [['Кто делает', state.mode === 'ai' ? 'ИИ' : 'Человек'], ['Герои', state.heroes.map(h => h.name).join(', ')], ['Уровни', state.moments.length], ...Object.entries(state.opts)];
+  const rows = [['Кто делает', state.mode === 'ai' ? 'ИИ' : 'Человек'], ['Герои', state.heroes.map(h => h.name).join(', ')], ['Главы', state.moments.length], ...Object.entries(state.opts)];
   if (extraH + extraL) rows.push(['Доплата', (extraH + extraL) + ' × ' + fmt(P.extra)]);
   $('#summary').innerHTML = rows.map(([a, b]) => `<div class="sum-row"><span>${a}</span><span>${b}</span></div>`).join('');
   $('#planName').textContent = '«' + p.name + '»';
   $('#total').textContent = fmt(total);
-  $('#planInfo').textContent = `До ${p.heroes} героев и ${p.levels} уровней, ${p.time}.` + (state.mode === 'human' ? ' Портретное сходство по фото, сюжет пишет сценарист.' : ' Превью бесплатно — платите, если понравится.');
+  $('#planInfo').textContent = `До ${p.heroes} героев и ${p.levels} глав, ${p.time}.` + (state.mode === 'human' ? ' Портретное сходство по фото, сюжет пишет сценарист.' : ' Превью бесплатно — платите, если понравится.');
   $('#go').textContent = state.mode === 'ai' ? 'Создать игру' : 'Заказать у художника';
   $('#goNote').textContent = state.mode === 'ai' ? 'Сначала бесплатное превью, оплата — потом.' : 'Предоплата 50%, остаток — после превью.';
 }
@@ -326,7 +326,7 @@ $('#go').onclick = () => {
   $('#gen').hidden = false; runGen();
 };
 function runGen() {
-  const steps = ['Прочитали вашу историю', 'Нарисовали героев: ' + state.heroes.map(h => h.name).join(', '), ...state.moments.map((m, i) => 'Построили уровень ' + (i + 1) + ': ' + (m[0] || 'без названия')), 'Написали диалоги и записку в финале'];
+  const steps = ['Прочитали вашу историю', 'Нарисовали героев: ' + state.heroes.map(h => h.name).join(', '), ...state.moments.map((m, i) => 'Собрали главу ' + (i + 1) + ': ' + (m[0] || 'без названия')), 'Написали диалоги и записку в финале'];
   const bar = $('#bar'); bar.innerHTML = '<i></i>'.repeat(20);
   const gctx = $('#genScene').getContext('2d');
   let p = 0; const start = performance.now();
@@ -362,7 +362,7 @@ function buildGame() {
     const last = i === moments.length - 1;
     return {
       photo: m[2] ? m[2].pixel : null, photoOriginal: m[2] ? m[2].original : null,
-      title: m[0] || 'Уровень ' + (i + 1), place: m[1] || '', theme: guessTheme(m[0] + ' ' + m[1] + ' ' + mem.map(x => x.text).join(' '), i),
+      title: m[0] || 'Глава ' + (i + 1), place: m[1] || '', theme: guessTheme(m[0] + ' ' + m[1] + ' ' + mem.map(x => x.text).join(' '), i),
       intro: [{ who: player.id, text: m[1] ? m[1] + '. Соберу все воспоминания по пути!' : 'Соберу все воспоминания по пути!' }],
       memories: mem,
       outro: [{ who: partner.id, text: last ? 'Ты прошёл весь путь… У меня для тебя кое-что есть.' : 'Идём дальше? Впереди ещё столько всего!' }]

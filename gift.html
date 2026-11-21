@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=16">
+<link rel="stylesheet" href="assets/style.css?v=17">
 <link id="site-theme" rel="stylesheet" href="assets/retro.css?v=3">
 <style>
   body { min-height: 100vh; min-height: 100dvh; overflow-x: hidden; }
@@ -145,7 +145,7 @@ async function startServer() {
   try { meta = await PHAPI.api('/api/gift/' + slug); } catch (e) { show('missing'); return; }
   setGiftTheme(q.get('theme') || meta.theme);
   const fake = { from: meta.from, recipient: meta.recipient, levels: new Array(meta.levels).fill(0), heroes: [] };
-  document.title = 'Тебе подарок от ' + (meta.from || 'близкого человека') + ' — Pixel History';
+  document.title = 'Тебе подарок' + (meta.from ? ' · от: ' + meta.from : '') + ' — Pixel History';
   document.querySelectorAll('[data-name]').forEach(el => el.textContent = meta.recipient || 'Привет');
   if (meta.locked) { game = Object.assign(fake, { openAt: meta.open_at }); start(); return; }
   if (meta.question) {
@@ -163,7 +163,7 @@ async function startServer() {
 function start() {
   if (!game) { show('missing'); return; }
   setGiftTheme(q.get('theme') || game.giftTheme);
-  document.title = 'Тебе подарок от ' + (game.from || 'близкого человека') + ' — Pixel History';
+  document.title = 'Тебе подарок' + (game.from ? ' · от: ' + game.from : '') + ' — Pixel History';
   document.querySelectorAll('[data-name]').forEach(el => el.textContent = partnerName(game));
   // 1. дата открытия
   if (game.openAt && new Date(game.openAt) > new Date()) {
@@ -192,8 +192,8 @@ function start() {
 
 function gift() {
   show('giftScr');
-  $('#giftText').textContent = (game.from || 'Близкий человек') + ' сделал' + (game.fromFemale ? 'а' : '') + ' для тебя игру из ваших общих воспоминаний. Пройди её до конца — там сюрприз.';
-  $('#dur').textContent = (game.levels || []).length + ' ' + ['уровень', 'уровня', 'уровней'][[2, 0, 1, 1, 1, 2][Math.min((game.levels || []).length % 10, 5)]];
+  $('#giftText').textContent = 'Это игра из ваших общих воспоминаний' + (game.from ? ' — от: ' + game.from : '') + '. Пройди её до конца — там сюрприз.';
+  $('#dur').textContent = (game.levels || []).length + ' ' + ['глава', 'главы', 'глав'][[2, 0, 1, 1, 1, 2][Math.min((game.levels || []).length % 10, 5)]];
   const open = () => {
     $('#giftBox').classList.add('open');
     setTimeout(() => { show('play'); PHGame.start($('#game'), game); }, 650);

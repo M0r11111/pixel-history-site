@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=16">
+<link rel="stylesheet" href="assets/style.css?v=17">
 <link id="site-theme" rel="stylesheet" href="assets/retro.css?v=3">
 <style>
   /* плашка «до праздника» */
@@ -35,9 +35,9 @@
   .calc .rows { display: grid; gap: 16px; }
   .calc .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
   .calc .row > span { color: var(--muted); font-size: 14px; }
-  .step { display: flex; align-items: center; border: 3px solid var(--surface2); }
-  .step button { width: 38px; height: 38px; background: var(--surface2); color: var(--text); border: 0; font-family: var(--pixel); font-size: 14px; cursor: pointer; }
-  .step output { min-width: 46px; text-align: center; font-weight: 700; }
+  .qty { display: flex; align-items: center; border: 3px solid var(--surface2); }
+  .qty button { width: 38px; height: 38px; background: var(--surface2); color: var(--text); border: 0; font-family: var(--pixel); font-size: 14px; cursor: pointer; }
+  .qty output { min-width: 46px; text-align: center; font-weight: 700; }
   .calc .seg { display: flex; flex-wrap: wrap; gap: 8px; }
   .calc .seg button { border: 3px solid var(--surface2); background: none; color: var(--text); padding: 8px 12px; cursor: pointer; font: inherit; font-size: 13px; }
   .calc .seg button.on { border-color: var(--moss); color: var(--moss); }
@@ -117,7 +117,7 @@
     <p class="lead">Ваши люди, ваши места, ваши шутки — в пиксельной игре, которую он пройдёт по ссылке на телефоне или ноутбуке. Такой подарок не найти на полке: он собран из вашей жизни.</p>
     <div class="pillars">
       <div class="pillar"><canvas data-icon="heart"></canvas><div><b>Ваши люди</b>Вы и близкий — главные герои</div></div>
-      <div class="pillar"><canvas data-icon="pin"></canvas><div><b>Ваши места</b>Уровни там, где вы были вместе</div></div>
+      <div class="pillar"><canvas data-icon="pin"></canvas><div><b>Ваши места</b>Главы там, где вы были вместе</div></div>
       <div class="pillar"><canvas data-icon="chat"></canvas><div><b>Ваши шутки</b>Диалоги и пасхалки только для вас</div></div>
     </div>
   </div>
@@ -179,10 +179,10 @@
     <div style="display:grid;gap:24px">
       <span class="kicker">// Демо-игра</span>
       <h2>Сыграйте в игру,<br>сделанную у нас</h2>
-      <p class="muted">Настоящая история дружбы: Дайвинчик, ночной комп-клуб в Актобе, переезд в Алматы и встреча, которая случилась не с первого раза. Пройдите её за 7 минут — и вы поймёте, что получит ваш близкий.</p>
+      <p class="muted">Настоящая история дружбы: Дайвинчик, ночной комп-клуб в Актобе, переезд в Алматы и встреча, которая случилась не с первого раза. 9 глав с мини-играми, примерно 20 минут. Пройдите — и поймёте, что получит ваш близкий.</p>
       <div style="display:flex;gap:16px;flex-wrap:wrap">
         <a class="btn primary" href="play.html">Играть в демо</a>
-        <a class="btn" href="create.html">Сделать свою</a>
+        <a class="btn" href="gift.html?demo">Открыть как подарок</a>
       </div>
     </div>
   </div>
@@ -251,7 +251,7 @@
       <button data-m="human"><b>Делает человек</b><span>художник и сценарист · 3–5 дней</span></button>
     </div>
     <div class="free-strip" data-mode="ai">
-      <div><b>ПРЕВЬЮ — БЕСПЛАТНО</b><span class="muted">Создайте игру, пройдите первый уровень и платите, только если понравилось.</span></div>
+      <div><b>ПРЕВЬЮ — БЕСПЛАТНО</b><span class="muted">Создайте игру, пройдите первую главу и платите, только если понравилось.</span></div>
       <a class="btn" href="create.html">Попробовать</a>
     </div>
     <div class="free-strip human" data-mode="human" hidden>
@@ -262,20 +262,20 @@
       <div class="price">
         <h3>Мини</h3>
         <div class="amount" data-kzt="9 990 ₸" data-rub="1 990 ₽" data-eur="20 €">9 990 ₸</div>
-        <ul><li>2 героя по фото</li><li>3 уровня</li><li>1 мини-игра</li><li>Готово за 3 дня</li><li>2 круга правок</li><li>Ссылка навсегда</li></ul>
+        <ul><li>2 героя по фото</li><li>3 главы</li><li>1 мини-игра</li><li>Готово за 3 дня</li><li>2 круга правок</li><li>Ссылка навсегда</li></ul>
         <a class="btn block" href="create.html?mode=human&plan=mini">Заказать</a>
       </div>
       <div class="price hit">
         <span class="hit-badge">ХИТ</span>
         <h3>Для двоих</h3>
         <div class="amount" data-kzt="24 990 ₸" data-rub="4 990 ₽" data-eur="50 €">24 990 ₸</div>
-        <ul><li>До 4 героев — портретно по фото</li><li>6 уровней</li><li>3 мини-игры, одна — авторская</li><li>Сюжет и диалоги пишет сценарист</li><li>Готово за 3–5 дней</li><li>3 круга правок</li><li>Ссылка-подарок навсегда</li></ul>
+        <ul><li>До 4 героев — портретно по фото</li><li>6 глав</li><li>3 мини-игры, одна — авторская</li><li>Сюжет и диалоги пишет сценарист</li><li>Готово за 3–5 дней</li><li>3 круга правок</li><li>Ссылка-подарок навсегда</li></ul>
         <a class="btn primary block" href="create.html?mode=human&plan=duo">Заказать</a>
       </div>
       <div class="price">
         <h3>Компания</h3>
         <div class="amount" data-kzt="59 990 ₸" data-rub="11 990 ₽" data-eur="120 €">59 990 ₸</div>
-        <ul><li>До 12 героев по фото</li><li>12 уровней</li><li>6 мини-игр, 2 авторские</li><li>Сюжет и финальное письмо</li><li>Готово за 5 дней</li><li>Правки без ограничений</li><li>Общая открытка от всех друзей</li></ul>
+        <ul><li>До 12 героев по фото</li><li>12 глав</li><li>6 мини-игр, 2 авторские</li><li>Сюжет и финальное письмо</li><li>Готово за 5 дней</li><li>Правки без ограничений</li><li>Общая открытка от всех друзей</li></ul>
         <a class="btn block" href="create.html?mode=human&plan=crew">Заказать</a>
       </div>
     </div>
@@ -283,30 +283,30 @@
       <div class="price">
         <h3>Мини</h3>
         <div class="amount" data-kzt="4 990 ₸" data-rub="990 ₽" data-eur="10 €">4 990 ₸</div>
-        <ul><li>2 героя</li><li>3 уровня</li><li>1 мини-игра</li><li>Ссылка навсегда</li><li>3 перегенерации</li></ul>
+        <ul><li>2 героя</li><li>3 главы</li><li>1 мини-игра</li><li>Ссылка навсегда</li><li>3 перегенерации</li></ul>
         <a class="btn block" href="create.html?plan=mini">Выбрать</a>
       </div>
       <div class="price hit">
         <span class="hit-badge">ХИТ</span>
         <h3>Для двоих</h3>
         <div class="amount" data-kzt="14 990 ₸" data-rub="2 990 ₽" data-eur="30 €">14 990 ₸</div>
-        <ul><li>До 4 героев</li><li>6 уровней</li><li>3 мини-игры</li><li>Ваша открытка в начале игры</li><li>Дата открытия и секретный вопрос</li><li>Страница-подарок с открыткой</li><li>Правки без ограничений 30 дней</li></ul>
+        <ul><li>До 4 героев</li><li>6 глав</li><li>3 мини-игры</li><li>Ваша открытка в начале игры</li><li>Дата открытия и секретный вопрос</li><li>Страница-подарок с открыткой</li><li>Правки без ограничений 30 дней</li></ul>
         <a class="btn primary block" href="create.html?plan=duo">Выбрать</a>
       </div>
       <div class="price">
         <h3>Компания</h3>
         <div class="amount" data-kzt="29 990 ₸" data-rub="5 990 ₽" data-eur="60 €">29 990 ₸</div>
-        <ul><li>До 12 героев</li><li>12 уровней</li><li>6 мини-игр</li><li>Сюжет и диалоги пишет ИИ</li><li>Можно скинуться компанией</li><li>Общая открытка от всех друзей</li><li>Приоритетная генерация</li></ul>
+        <ul><li>До 12 героев</li><li>12 глав</li><li>6 мини-игр</li><li>Сюжет и диалоги пишет ИИ</li><li>Можно скинуться компанией</li><li>Общая открытка от всех друзей</li><li>Приоритетная генерация</li></ul>
         <a class="btn block" href="create.html?plan=crew">Выбрать</a>
       </div>
     </div>
     <div class="addons" data-mode="ai">
-      <span><b>+ уровень или герой</b> — <span data-kzt="990 ₸" data-rub="199 ₽" data-eur="2 €">990 ₸</span></span>
+      <span><b>+ глава или герой</b> — <span data-kzt="990 ₸" data-rub="199 ₽" data-eur="2 €">990 ₸</span></span>
       <span><b>Передать человеку</b> — можно в любой момент, доплатив разницу</span>
       <span><b>Срочно</b> — не нужно: игра готова за минуты</span>
     </div>
     <div class="addons" data-mode="human" hidden>
-      <span><b>+ уровень или герой</b> — <span data-kzt="3 990 ₸" data-rub="790 ₽" data-eur="8 €">3 990 ₸</span></span>
+      <span><b>+ глава или герой</b> — <span data-kzt="3 990 ₸" data-rub="790 ₽" data-eur="8 €">3 990 ₸</span></span>
       <span><b>Авторская мини-игра</b> — <span data-kzt="7 990 ₸" data-rub="1 590 ₽" data-eur="16 €">7 990 ₸</span></span>
       <span><b>Срочно за 24 часа</b> — +30%</span>
     </div>
@@ -315,11 +315,11 @@
       <div class="rows">
         <span class="kicker">// Калькулятор подарка</span>
         <div class="row"><span>Набор</span><div class="seg" id="cPlan"><button data-p="mini">Мини</button><button class="on" data-p="duo">Для двоих</button><button data-p="crew">Компания</button></div></div>
-        <div class="row"><span>Героев</span><div class="step" data-k="heroes"><button data-d="-1">−</button><output>2</output><button data-d="1">+</button></div></div>
-        <div class="row"><span>Глав (воспоминаний)</span><div class="step" data-k="levels"><button data-d="-1">−</button><output>6</output><button data-d="1">+</button></div></div>
-        <div class="row" id="cMiniRow" hidden><span>Авторские мини-игры</span><div class="step" data-k="minis"><button data-d="-1">−</button><output>0</output><button data-d="1">+</button></div></div>
+        <div class="row"><span>Героев</span><div class="qty" data-k="heroes"><button data-d="-1">−</button><output>2</output><button data-d="1">+</button></div></div>
+        <div class="row"><span>Глав (воспоминаний)</span><div class="qty" data-k="levels"><button data-d="-1">−</button><output>6</output><button data-d="1">+</button></div></div>
+        <div class="row" id="cMiniRow" hidden><span>Авторские мини-игры</span><div class="qty" data-k="minis"><button data-d="-1">−</button><output>0</output><button data-d="1">+</button></div></div>
         <div class="row" id="cUrgentRow" hidden><span>Срочно за 24 часа (+30%)</span><div class="seg" id="cUrgent"><button class="on" data-u="0">Нет</button><button data-u="1">Да</button></div></div>
-        <div class="row"><span>Скинуться компанией</span><div class="step" data-k="people"><button data-d="-1">−</button><output>1</output><button data-d="1">+</button></div></div>
+        <div class="row"><span>Скинуться компанией</span><div class="qty" data-k="people"><button data-d="-1">−</button><output>1</output><button data-d="1">+</button></div></div>
       </div>
       <div class="total">
         <span class="muted small" id="cMode">Делает ИИ</span>
@@ -375,7 +375,7 @@
       <details><summary>Сколько длится игра?</summary><p>Одна глава — 2–3 минуты. Игра на 6 глав проходится примерно за 15–20 минут, её приятно пройти ещё раз вдвоём.</p></details>
       <details><summary>Можно ли сделать места как в жизни?</summary><p>Да. К каждому воспоминанию можно приложить фото места — оно станет пиксельным фоном главы. Без фото подберём похожую локацию: двор, кафе, клуб, кино, горы.</p></details>
       <details><summary>Сколько живёт ссылка?</summary><p>Навсегда. Никаких ежегодных продлений.</p></details>
-      <details><summary>А если не понравится?</summary><p>Превью бесплатное — вы платите, только если игра понравилась. После оплаты можно сколько угодно править и пересоздавать уровни 30 дней.</p></details>
+      <details><summary>А если не понравится?</summary><p>Превью бесплатное — вы платите, только если игра понравилась. После оплаты можно сколько угодно править и пересоздавать главы 30 дней.</p></details>
       <details><summary>Что вы делаете с моей историей?</summary><p>История и герои используются только для вашей игры. Игра не попадает в поиск — открыть её можно только по ссылке.</p></details>
     </div>
   </div>
@@ -489,7 +489,7 @@
     const extraH = Math.max(0, calc.heroes - pl.heroes), extraL = Math.max(0, calc.levels - pl.levels);
     let total = pl.price + (extraH + extraL) * P.extra + (calc.mode === 'human' ? calc.minis * P.mini : 0);
     if (calc.mode === 'human' && calc.urgent) total *= 1.3;
-    document.querySelectorAll('.calc .step').forEach(st => st.querySelector('output').textContent = calc[st.dataset.k]);
+    document.querySelectorAll('.calc .qty').forEach(st => st.querySelector('output').textContent = calc[st.dataset.k]);
     document.getElementById('cMode').textContent = calc.mode === 'ai' ? 'Делает ИИ · превью бесплатно' : 'Делает человек · предоплата 50%';
     document.getElementById('cSum').textContent = money(total, cur);
     const per = document.getElementById('cPer'); per.hidden = calc.people < 2; per.textContent = 'по ' + money(total / calc.people, cur) + ' с каждого из ' + calc.people;
@@ -498,7 +498,7 @@
     document.getElementById('cGo').href = 'create.html?' + (calc.mode === 'human' ? 'mode=human&' : '') + 'plan=' + calc.plan;
   }
   const LIM = { heroes: [1, 20], levels: [1, 20], minis: [0, 10], people: [1, 30] };
-  document.querySelectorAll('.calc .step').forEach(st => st.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const k = st.dataset.k; calc[k] = Math.max(LIM[k][0], Math.min(LIM[k][1], calc[k] + +b.dataset.d)); renderCalc(); }));
+  document.querySelectorAll('.calc .qty').forEach(st => st.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const k = st.dataset.k; calc[k] = Math.max(LIM[k][0], Math.min(LIM[k][1], calc[k] + +b.dataset.d)); renderCalc(); }));
   document.getElementById('cPlan').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; calc.plan = b.dataset.p; const pl = PLANS[calc.mode][calc.plan]; calc.heroes = Math.min(calc.heroes, pl.heroes); calc.levels = pl.levels; document.querySelectorAll('#cPlan button').forEach(x => x.classList.toggle('on', x === b)); renderCalc(); });
   document.getElementById('cUrgent').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; calc.urgent = b.dataset.u === '1'; document.querySelectorAll('#cUrgent button').forEach(x => x.classList.toggle('on', x === b)); renderCalc(); });
   document.getElementById('mode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { calc.mode = b.dataset.m; renderCalc(); } });
