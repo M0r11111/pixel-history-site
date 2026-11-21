@@ -16,7 +16,17 @@ function PHEngineFactory(global) {
     beach:     { sky: ['#4A8FC0', '#6FAFD8', '#A8D4EC', '#F2E3A0'], far: '#3E7FB0', mid: '#4A9CC8', top: '#F2D9A0', top2: '#E8C887', soil: '#D9B877', soil2: '#C9A867', deco: ['palm', 'shell', 'palm'], water: '#3E8FC0', sun: true },
     night:     { sky: ['#0B0E1A', '#121730', '#1A2142', '#232B52'], far: '#1A2238', mid: '#232E48', top: '#3E5E4A', top2: '#2F4A3A', soil: '#2A2420', soil2: '#211C19', deco: ['tree', 'lantern', 'tree'], stars: true, moon: true, fireflies: true },
     snow:      { sky: ['#5C6E8C', '#7A8CA8', '#A8B8CC', '#D8E0EA'], far: '#C9D4E0', mid: '#9FB0C4', top: '#F4F7FA', top2: '#DDE5EE', soil: '#8A9AB0', soil2: '#7A8AA0', deco: ['pine', 'snowman', 'pine'], peaks: true, cap: '#FFFFFF', snowfall: true },
-    home:      { sky: ['#3A2A20', '#4A3626', '#5A4230', '#6A4E38'], far: '#5E4530', mid: '#4A3626', top: '#8A5A2E', top2: '#7A4E28', soil: '#4A3626', soil2: '#3B2B1E', deco: ['plant', 'lamp', 'plant'], interior: true }
+    home:      { sky: ['#3A2A20', '#4A3626', '#5A4230', '#6A4E38'], far: '#5E4530', mid: '#4A3626', top: '#8A5A2E', top2: '#7A4E28', soil: '#4A3626', soil2: '#3B2B1E', deco: ['plant', 'lamp', 'plant'], interior: true },
+    // --- сюжетные локации (scene — своя отрисовка фона, flat — без ям: помещения)
+    club:      { scene: 'club', flat: true, sky: ['#1A1426'], top: '#3A3352', top2: '#2E2844', soil: '#241E36', soil2: '#1E192E', deco: ['plant', 'cooler'] },
+    winter:    { sky: ['#0B0E1A', '#121730', '#1A2142', '#232B52'], far: '#1F2540', mid: '#2A3150', top: '#F4F7FA', top2: '#DDE5EE', soil: '#6B7A90', soil2: '#5C6B80', deco: ['lamp', 'snowman', 'bench'], stars: true, buildings: true, roofSnow: true, snowfall: true },
+    almaty:    { scene: 'almaty', sky: ['#2A2E4A'], top: '#8A8A8A', top2: '#6B6B6B', soil: '#3B3B46', soil2: '#33333D', deco: ['lamp', 'tree', 'bench'] },
+    office:    { scene: 'office', flat: true, sky: ['#CFC7B2'], top: '#8A6A3A', top2: '#7A5C30', soil: '#5E4530', soil2: '#4E3A28', deco: ['plant', 'rack', 'cooler'] },
+    autumn:    { scene: 'autumn', sky: ['#7FB2E5'], top: '#B5A040', top2: '#9C8A34', soil: '#6E5430', soil2: '#5E4628', deco: ['tree_autumn', 'bench', 'tree_autumn', 'lamp'], leaves: true },
+    mall:      { scene: 'mall', flat: true, sky: ['#E9DFC9'], top: '#C9BCA8', top2: '#B8AA94', soil: '#8F8270', soil2: '#7F7262', deco: ['plant', 'bench', 'kiosk'] },
+    cinema:    { scene: 'cinema', flat: true, sky: ['#140C12'], top: '#5A1E28', top2: '#4A1820', soil: '#2A1016', soil2: '#220C12', deco: ['popcorn', 'lamp'] },
+    optics:    { scene: 'optics', flat: true, sky: ['#E3EEF0'], top: '#D9D3C0', top2: '#C9C2AE', soil: '#9C9584', soil2: '#8C8574', deco: ['mirror', 'plant'] },
+    food:      { scene: 'food', flat: true, sky: ['#E9A04A'], top: '#C9A27A', top2: '#B8916A', soil: '#7A5C40', soil2: '#6A4E36', deco: ['table', 'plant', 'table'] }
   };
   const THEME_NAMES = Object.keys(THEMES);
 
@@ -77,7 +87,7 @@ function PHEngineFactory(global) {
     while (x < len) {
       if (x < 10 || x >= len - 14) { ground[x++] = gy; continue; }
       const v = r();
-      if (v < 0.16 && ground[x - 1] !== null) {
+      if (v < 0.16 && ground[x - 1] !== null && !(THEMES[L.theme] || {}).flat) {   // в помещениях ям нет
         const gw = 2 + Math.floor(r() * 2);
         for (let i = 0; i < gw && x < len - 14; i++) ground[x++] = null;
       } else {
@@ -113,7 +123,114 @@ function PHEngineFactory(global) {
   function surfaceY(lv, tx) { const g = lv.ground[clamp(tx, 0, lv.len - 1)]; return g === null ? null : g * T; }
 
   /* ---------------- рисование окружения ---------------- */
+  /* ---------- фоны сюжетных локаций ---------- */
+  const SCENES = {
+    club(ctx, cam, t) {   // компьютерный клуб ночью
+      P(ctx, '#1A1426', 0, 0, W, H); P(ctx, '#221A33', 0, 0, W, 116); P(ctx, '#C03AB0', 0, 116, W, 3); P(ctx, 'rgba(192,58,176,.15)', 0, 110, W, 16);
+      const fx = cam * 0.2;
+      for (let i = -1; i < 4; i++) {
+        const bx = Math.round(i * 300 - (fx % 300));
+        P(ctx, '#0E0A16', bx + 40, 30, 200, 56); P(ctx, '#2A2040', bx + 44, 34, 192, 48);
+        ctx.font = '14px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = Math.sin(t / 300 + i) > -0.6 ? '#4FE3FF' : '#1C5A66'; ctx.fillText('COMPUTER CLUB', bx + 140, 58);
+      }
+      const mx = cam * 0.5;
+      for (let i = -1; i < 14; i++) {
+        const bx = Math.round(i * 56 - (mx % 56)), on = (i * 7 + Math.floor(t / 900)) % 5 !== 0;
+        P(ctx, 'rgba(80,140,255,.07)', bx + 4, 170, 46, 50);
+        P(ctx, '#12101A', bx + 12, 184, 28, 22); P(ctx, on ? '#4F8CFF' : '#2A3A66', bx + 14, 186, 24, 16);
+        if (on) P(ctx, '#9FD0FF', bx + 16, 188, 8, 2);
+        P(ctx, '#12101A', bx + 24, 206, 4, 6); P(ctx, '#3A2E4A', bx + 2, 212, 50, 5); P(ctx, '#2A2238', bx + 6, 217, 3, 30); P(ctx, '#2A2238', bx + 45, 217, 3, 30);
+      }
+    },
+    almaty(ctx, cam, t) {   // Алматы: горы со снежными шапками и город
+      const sky = ['#2A2E4A', '#3E3A5C', '#6A4E6E', '#B8706A'];
+      sky.forEach((c, i) => P(ctx, c, 0, i * 50, W, 51)); P(ctx, '#B8706A', 0, 200, W, H);
+      const fx = cam * 0.12;
+      for (let i = -1; i < 5; i++) { const bx = Math.floor(i * 220 - (fx % 220)), ph = 150 + ((i + Math.floor(fx / 220)) * 41 % 50 + 50) % 50; for (let y = 0; y < ph; y += 4) { const w = Math.floor(y * 1.4); P(ctx, y < 30 ? '#EDE4CF' : '#4A4A6A', bx + 110 - w, 250 - ph + y, w * 2, 4); } }
+      const mx = cam * 0.35;
+      for (let i = -1; i < 12; i++) {
+        const k = i + Math.floor(mx / 64), bx = Math.floor(i * 64 - (mx % 64)), bh = 60 + (Math.abs(k * 37) % 90);
+        P(ctx, '#23263D', bx, 280 - bh, 56, bh);
+        for (let wy = 280 - bh + 8; wy < 270; wy += 14) for (let wx = bx + 6; wx < bx + 50; wx += 12) if (((wx + wy + k * 5) % 7) < 3) P(ctx, '#F2C46B', wx, wy, 5, 6);
+      }
+    },
+    office(ctx, cam, t) {   // офис: окна с видом на горы
+      P(ctx, '#CFC7B2', 0, 0, W, H); P(ctx, '#B8AF98', 0, 200, W, 4);
+      const fx = cam * 0.3;
+      for (let i = -1; i < 6; i++) {
+        const bx = Math.round(i * 150 - (fx % 150));
+        P(ctx, '#8A8270', bx + 20, 36, 110, 120); P(ctx, '#8FC0E6', bx + 24, 40, 102, 112);
+        for (let y = 0; y < 50; y += 4) { const w = Math.floor(y * 1.2); P(ctx, y < 14 ? '#FFFFFF' : '#7A8CA8', bx + 75 - w, 100 + y, w * 2, 4); }
+        P(ctx, '#8A8270', bx + 73, 40, 4, 112); P(ctx, '#8A8270', bx + 24, 94, 102, 4);
+      }
+      const mx = cam * 0.55;
+      for (let i = -1; i < 10; i++) { const bx = Math.round(i * 90 - (mx % 90)); P(ctx, '#6E5A40', bx + 8, 214, 64, 6); P(ctx, '#2A2A33', bx + 26, 190, 26, 18); P(ctx, '#6FB5FF', bx + 28, 192, 22, 13); P(ctx, '#5E4A34', bx + 12, 220, 4, 26); P(ctx, '#5E4A34', bx + 64, 220, 4, 26); }
+    },
+    autumn(ctx, cam, t) {   // Актобе, начало осени, день
+      ['#7FB2E5', '#94C0EA', '#AECFEE', '#CFE2F2'].forEach((c, i) => P(ctx, c, 0, i * 45, W, 46)); P(ctx, '#CFE2F2', 0, 180, W, H);
+      P(ctx, '#FFE98A', 520, 40, 40, 40); P(ctx, '#FFD23F', 526, 46, 28, 28);
+      const fx = cam * 0.25;
+      for (let i = -1; i < 11; i++) {
+        const k = i + Math.floor(fx / 72), bx = Math.floor(i * 72 - (fx % 72)), bh = 70 + (Math.abs(k * 43) % 80);
+        P(ctx, ['#C9B8A0', '#B8A890', '#D8C8B0'][Math.abs(k) % 3], bx, 260 - bh, 62, bh);
+        for (let wy = 260 - bh + 10; wy < 250; wy += 16) for (let wx = bx + 8; wx < bx + 56; wx += 14) P(ctx, '#7A8CA8', wx, wy, 7, 8);
+      }
+      const mx = cam * 0.5;
+      for (let i = -1; i < 12; i++) { const bx = Math.floor(i * 70 - (mx % 70)); P(ctx, '#5E4530', bx + 30, 230, 6, 40); P(ctx, (i % 3) ? '#E0952F' : '#E8C547', bx + 12, 200, 42, 34); P(ctx, '#C0593A', bx + 20, 194, 26, 12); }
+    },
+    mall(ctx, cam, t) {   // ТЦ «Керуен Сити»
+      P(ctx, '#E9DFC9', 0, 0, W, H); P(ctx, '#D8CCB4', 0, 0, W, 26);
+      for (let x = 20; x < W; x += 80) { P(ctx, '#FFF6D8', x, 20, 40, 6); P(ctx, 'rgba(255,246,216,.25)', x - 10, 26, 60, 30); }
+      const bx0 = Math.round(-(cam * 0.15) % 640);
+      for (let j = 0; j < 3; j++) { const bx = bx0 + j * 640; P(ctx, '#2A2420', bx + 170, 40, 300, 36); ctx.font = '16px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#D4B95E'; ctx.fillText('KERUEN CITY', bx + 320, 59); }
+      const fx = cam * 0.35, aw = ['#C0593A', '#4A6E9C', '#6E9145', '#D4B95E', '#9B8AC4'], nm = ['CAFE', 'SHOES', 'TOYS', 'FOOD', 'BOOKS'];
+      for (let i = -1; i < 6; i++) {
+        const k = Math.abs(i + Math.floor(fx / 150)) % 5, bx = Math.floor(i * 150 - (fx % 150));
+        P(ctx, '#8A7E6A', bx + 8, 96, 134, 120); P(ctx, '#BFD8E0', bx + 14, 120, 122, 96); P(ctx, aw[k], bx + 8, 96, 134, 20);
+        ctx.font = '8px ' + FONT; ctx.fillStyle = '#FFFFFF'; ctx.fillText(nm[k], bx + 75, 106);
+        P(ctx, 'rgba(255,255,255,.4)', bx + 20, 126, 10, 80);
+      }
+    },
+    cinema(ctx, cam, t) {   // кинозал
+      P(ctx, '#140C12', 0, 0, W, H);
+      const fx = cam * 0.1, sx = Math.round(80 - (fx % 900));
+      for (let j = 0; j < 3; j++) { const x = sx + j * 900; P(ctx, '#3A2A30', x - 6, 24, 492, 152); const fl = 0.85 + Math.sin(t / 90) * 0.08; ctx.fillStyle = `rgba(237,228,207,${fl})`; ctx.fillRect(x, 30, 480, 140); P(ctx, '#C9DCE3', x + 40, 120, 160, 50); P(ctx, '#7A8CA8', x + 260, 70, 120, 100); P(ctx, 'rgba(255,255,255,.08)', x - 60, 170, 600, 60); }
+      const mx = cam * 0.5;
+      for (let r = 0; r < 2; r++) for (let i = -1; i < 22; i++) { const bx = Math.round(i * 32 - (mx % 32)) + r * 16; P(ctx, r ? '#7A1E2A' : '#5A1620', bx, 200 + r * 18, 26, 22); P(ctx, r ? '#9A2A36' : '#6E1C28', bx + 2, 200 + r * 18, 22, 6); }
+    },
+    optics(ctx, cam, t) {   // оптика: витрины с оправами
+      P(ctx, '#E3EEF0', 0, 0, W, H);
+      const bx0 = Math.round(-(cam * 0.15) % 480);
+      for (let j = 0; j < 3; j++) { const bx = bx0 + j * 480; P(ctx, '#4A6E9C', bx + 150, 24, 180, 34); ctx.font = '14px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#FFFFFF'; ctx.fillText('ОПТИКА', bx + 240, 42); }
+      const fx = cam * 0.35;
+      for (let i = -1; i < 8; i++) {
+        const bx = Math.floor(i * 110 - (fx % 110));
+        P(ctx, '#B8C6CC', bx + 6, 76, 98, 140);
+        for (let s = 0; s < 4; s++) { P(ctx, '#8C9AA0', bx + 6, 104 + s * 30, 98, 3); for (let g2 = 0; g2 < 3; g2++) { const gx = bx + 14 + g2 * 30, gy = 92 + s * 30, c = ['#2A2420', '#8A5A2E', '#C0593A', '#4A6E9C'][(s + g2 + i) & 3]; P(ctx, c, gx, gy, 8, 2); P(ctx, c, gx + 12, gy, 8, 2); P(ctx, c, gx, gy, 2, 6); P(ctx, c, gx + 6, gy, 2, 6); P(ctx, c, gx + 12, gy, 2, 6); P(ctx, c, gx + 18, gy, 2, 6); P(ctx, c, gx, gy + 6, 8, 2); P(ctx, c, gx + 12, gy + 6, 8, 2); P(ctx, c, gx + 8, gy + 2, 4, 2); } }
+      }
+    },
+    food(ctx, cam, t) {   // донерная
+      P(ctx, '#E9A04A', 0, 0, W, 150); P(ctx, '#F2E3C9', 0, 150, W, H);
+      for (let x = 0; x < W; x += 16) for (let y = 150; y < H; y += 16) if (((x + y) >> 4) % 2) P(ctx, '#E6D4B4', x, y, 16, 16);
+      const bx0 = Math.round(-(cam * 0.2) % 420);
+      for (let j = 0; j < 3; j++) {
+        const bx = bx0 + j * 420; P(ctx, '#2A2420', bx + 60, 20, 300, 96);
+        ctx.font = '12px ' + FONT; ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillStyle = '#D4B95E'; ctx.fillText('ДОНЕР ....... 1800 ₸', bx + 74, 34);
+        ctx.fillStyle = '#EDE4CF'; ctx.fillText('ШАУРМА ...... 1500 ₸', bx + 74, 60); ctx.fillText('АЙРАН ........ 400 ₸', bx + 74, 86);
+      }
+      const mx = cam * 0.45;
+      for (let i = -1; i < 4; i++) {
+        const bx = Math.round(i * 260 - (mx % 260));
+        P(ctx, '#8A5A2E', bx + 20, 196, 200, 50); P(ctx, '#6E4624', bx + 20, 196, 200, 6);
+        P(ctx, '#B8B8B8', bx + 150, 128, 4, 70); P(ctx, '#9E5A2E', bx + 140, 140, 24, 52); P(ctx, '#C9783A', bx + 142, 144, 6, 44);
+        P(ctx, 'rgba(255,140,40,.25)', bx + 166, 140, 14, 52);
+      }
+    }
+  };
+
   function drawBackground(ctx, th, cam, t) {
+    if (th.scene && SCENES[th.scene]) { SCENES[th.scene](ctx, cam, t); return; }
     const band = H / th.sky.length;
     th.sky.forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(0, Math.floor(i * band * 0.7), W, Math.ceil(band * 0.7) + 1); });
     ctx.fillStyle = th.sky[th.sky.length - 1]; ctx.fillRect(0, Math.floor(band * 0.7 * th.sky.length), W, H);
@@ -130,7 +247,7 @@ function PHEngineFactory(global) {
     } else if (th.buildings) {
       for (let i = -1; i < 12; i++) {
         const k = i + Math.floor(fx / 70), bx = Math.floor(i * 70 - (fx % 70)), bh = 90 + (Math.abs(k * 53) % 110);
-        ctx.fillStyle = th.far; ctx.fillRect(bx, 270 - bh, 60, bh);
+        ctx.fillStyle = th.far; ctx.fillRect(bx, 270 - bh, 60, bh); if (th.roofSnow) { ctx.fillStyle = '#F4F7FA'; ctx.fillRect(bx - 2, 266 - bh, 64, 5); }
         for (let wy = 270 - bh + 10; wy < 260; wy += 16) for (let wx = bx + 8; wx < bx + 52; wx += 14) if (((wx + wy + k * 7) % 5) < 2) { ctx.fillStyle = '#D4B95E'; ctx.fillRect(wx, wy, 6, 8); }
       }
     } else if (th.interior) {
@@ -146,7 +263,8 @@ function PHEngineFactory(global) {
   }
 
   const P = (ctx, c, x, y, w, h) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), w, h); };
-  function drawDeco(ctx, d, sx, gy) {
+  function drawDeco(ctx, d, sx, gy, t) {
+    t = t || 0;
     const s = 4, b = gy;
     switch (d.type) {
       case 'tree': P(ctx, '#4A3626', sx + 12, b - 70, 12, 70); P(ctx, '#2F4A26', sx - 12, b - 120, 60, 56); P(ctx, '#3E5E30', sx - 4, b - 132, 44, 20); P(ctx, '#47603A', sx, b - 110, 16, 12); break;
@@ -162,6 +280,13 @@ function PHEngineFactory(global) {
       case 'lantern': P(ctx, '#2A2420', sx + 10, b - 50, 4, 50); P(ctx, '#4A3626', sx + 2, b - 66, 20, 18); P(ctx, '#F2E3A0', sx + 6, b - 62, 12, 10); P(ctx, 'rgba(242,227,160,.15)', sx - 16, b - 80, 56, 56); break;
       case 'snowman': P(ctx, '#FFFFFF', sx, b - 24, 28, 24); P(ctx, '#FFFFFF', sx + 4, b - 42, 20, 18); P(ctx, '#12150E', sx + 9, b - 36, 3, 3); P(ctx, '#12150E', sx + 16, b - 36, 3, 3); P(ctx, '#C0593A', sx + 13, b - 32, 6, 3); break;
       case 'plant': P(ctx, '#8A5A2E', sx + 4, b - 18, 20, 18); P(ctx, '#6E9145', sx, b - 36, 12, 18); P(ctx, '#5B7A3A', sx + 14, b - 40, 12, 22); break;
+      case 'cooler': P(ctx, '#DDE5EE', sx + 4, b - 44, 18, 44); P(ctx, '#B8C2CC', sx + 4, b - 20, 18, 3); P(ctx, '#6FAFD8', sx + 6, b - 62, 14, 18); P(ctx, '#C0593A', sx + 8, b - 34, 3, 3); P(ctx, '#4A6E9C', sx + 15, b - 34, 3, 3); break;
+      case 'rack': P(ctx, '#2A2A33', sx, b - 74, 28, 74); for (let i = 0; i < 6; i++) { P(ctx, '#3A3A46', sx + 3, b - 70 + i * 12, 22, 8); P(ctx, (Math.floor(t / 300) + i) % 3 ? '#6FE38A' : '#2A5A36', sx + 5, b - 67 + i * 12, 3, 2); P(ctx, (Math.floor(t / 200) + i) % 4 ? '#FFB84F' : '#5A3A14', sx + 10, b - 67 + i * 12, 3, 2); } break;
+      case 'tree_autumn': P(ctx, '#5E4530', sx + 12, b - 66, 10, 66); P(ctx, '#E0952F', sx - 12, b - 112, 58, 50); P(ctx, '#E8C547', sx - 4, b - 124, 42, 20); P(ctx, '#C0593A', sx + 24, b - 96, 16, 14); P(ctx, '#C0593A', sx - 8, b - 84, 12, 10); break;
+      case 'kiosk': P(ctx, '#8A5A2E', sx, b - 40, 40, 40); P(ctx, '#C0593A', sx - 4, b - 56, 48, 14); P(ctx, '#EDE4CF', sx + 4, b - 36, 32, 10); P(ctx, '#D4B95E', sx + 8, b - 52, 24, 6); break;
+      case 'popcorn': P(ctx, '#EDE4CF', sx + 4, b - 26, 18, 26); for (let i = 0; i < 3; i++) P(ctx, '#C0593A', sx + 6 + i * 6, b - 26, 3, 26); P(ctx, '#F2E3A0', sx + 2, b - 34, 22, 9); P(ctx, '#FFFFFF', sx + 6, b - 36, 4, 3); break;
+      case 'mirror': P(ctx, '#8A8270', sx + 14, b - 20, 4, 20); P(ctx, '#8A8270', sx + 2, b - 62, 28, 44); P(ctx, '#BFD8E0', sx + 5, b - 59, 22, 38); P(ctx, '#FFFFFF', sx + 8, b - 55, 3, 20); break;
+      case 'table': P(ctx, '#6E4624', sx + 14, b - 26, 4, 26); P(ctx, '#8A5A2E', sx - 4, b - 30, 40, 6); P(ctx, '#E3D6B5', sx + 4, b - 38, 14, 8); P(ctx, '#C0593A', sx + 6, b - 38, 10, 3); P(ctx, '#EDE4CF', sx + 22, b - 40, 6, 10); break;
     }
   }
 
@@ -206,9 +331,16 @@ function PHEngineFactory(global) {
 
   /* ---------------- запуск игры ---------------- */
   function start(container, game, opts = {}) {
-    const heroes = {}; (game.heroes || []).forEach(h => heroes[h.id] = h);
-    const playerHero = heroes[game.player] || game.heroes[0];
-    const partnerHero = heroes[game.partner] || game.heroes[1] || game.heroes[0];
+    // герои; patch уровня (например, шарф зимой или новые очки) меняет внешность только на этом уровне
+    const baseHeroes = {}; (game.heroes || []).forEach(h => baseHeroes[h.id] = h);
+    let heroes = baseHeroes, playerHero, partnerHero;
+    function applyPatch(patch) {
+      heroes = {};
+      Object.keys(baseHeroes).forEach(id => { heroes[id] = patch && patch[id] ? Object.assign({}, baseHeroes[id], patch[id]) : baseHeroes[id]; });
+      playerHero = heroes[game.player] || heroes[(game.heroes[0] || {}).id];
+      partnerHero = heroes[game.partner] || heroes[(game.heroes[1] || game.heroes[0] || {}).id];
+    }
+    applyPatch(null);
     const levels = (game.levels || []).map((L, i) => Object.assign({}, L, { theme: THEMES[L.theme] ? L.theme : THEME_NAMES[i % 3] }));
     const totalMem = levels.reduce((n, L) => n + (L.memories || []).length, 0);
     // Звук пока отключён (добавим позже): заглушка вместо Sound(game.mood)
@@ -253,16 +385,18 @@ function PHEngineFactory(global) {
     // состояние
     let state = game.card ? 'card' : 'title', li = 0, lv = null, cam = 0, collected = 0, banner = 0, dlg = null, t = 0, finaleChars = 0;
     const pl = { x: 0, y: 0, vx: 0, vy: 0, w: 24, h: 66, on: false, flip: false, safeX: 0, walk: 0 };
+    let ra = { x: 0, run: false, gone: false };   // goal: 'runaway' — партнёр убегает, встреча не случается
 
     function say(lines, done) { dlg = { lines: lines.filter(l => l && l.text), i: 0, chars: 0, done }; if (!dlg.lines.length) { dlg = null; done && done(); } }
-    function who(id) { if (id === 'memory') return { name: 'ВОСПОМИНАНИЕ' }; return heroes[id] || null; }
+    function who(id) { if (id === 'memory') return { name: 'ВОСПОМИНАНИЕ' }; if (id === 'narrator') return { name: '' }; return heroes[id] || null; }
 
     function loadLevel(i) {
-      li = i; lv = buildLevel(levels[i], i);
+      li = i; lv = buildLevel(levels[i], i); applyPatch(levels[i].patch);
+      ra = { x: lv.goalX, run: false, gone: false };
       pl.x = lv.startX; pl.y = surfaceY(lv, 3) - pl.h; pl.vx = pl.vy = 0; pl.safeX = pl.x; cam = 0;
       state = 'banner'; banner = 150;
     }
-    function nextLevel() { if (li + 1 < levels.length) loadLevel(li + 1); else { state = 'finale'; finaleChars = 0; } }
+    function nextLevel() { if (li + 1 < levels.length) loadLevel(li + 1); else { applyPatch(game.finale && game.finale.patch); state = 'finale'; finaleChars = 0; } }
 
     function update() {
       t += 16.7;
@@ -277,7 +411,7 @@ function PHEngineFactory(global) {
       }
       if (state === 'card' || state === 'title') { if (actPressed || jumpPressed) { if (state === 'card') state = 'title'; else loadLevel(0); } actPressed = jumpPressed = false; return; }
       if (state === 'banner') { if (--banner <= 0 || actPressed || jumpPressed) { state = 'play'; say(levels[li].intro || [], null); } actPressed = jumpPressed = false; return; }
-      if (state === 'finale') { const len = (game.finale && game.finale.letter || '').length; if (finaleChars < len) finaleChars += 0.8; if ((actPressed || jumpPressed) && finaleChars >= len) { state = 'title'; collected = 0; } else if (actPressed || jumpPressed) finaleChars = len; actPressed = jumpPressed = false; return; }
+      if (state === 'finale') { const len = (game.finale && game.finale.letter || '').length; if (finaleChars < len) finaleChars += 0.8; if ((actPressed || jumpPressed) && finaleChars >= len) { state = 'title'; collected = 0; applyPatch(null); } else if (actPressed || jumpPressed) finaleChars = len; actPressed = jumpPressed = false; return; }
       if (state !== 'play') return;
 
       // движение
@@ -309,9 +443,14 @@ function PHEngineFactory(global) {
         }
       });
       // финиш уровня
-      if (pl.x + pl.w > lv.goalX - 30) {
+      const L = levels[li], goal = L.goal || 'partner';
+      if (goal === 'runaway') {
+        if (!ra.run && pl.x > lv.goalX - 300) { ra.run = true; if (L.runLine) say([{ who: playerHero.id, text: L.runLine }], null); }
+        if (ra.run && !ra.gone) { ra.x += 5.5; if (ra.x - cam > W + 80) ra.gone = true; }
+      }
+      if (pl.x + pl.w > lv.goalX - 30 && (goal !== 'runaway' || ra.gone)) {
         pl.vx = 0; state = 'outro';
-        const L = levels[li]; const out = (L.outro && L.outro.length) ? L.outro : [{ who: partnerHero.id, text: 'Идём дальше?' }];
+        const out = (L.outro && L.outro.length) ? L.outro : [{ who: goal === 'partner' ? partnerHero.id : playerHero.id, text: 'Идём дальше.' }];
         say(out, nextLevel);
       }
       cam = clamp(pl.x - W * 0.4, 0, lv.len * T - W);
@@ -323,7 +462,7 @@ function PHEngineFactory(global) {
       let tx = x + 16;
       if (h && h.skin) { P(ctx, '#3B4630', x + 10, y + 10, 72, 72); drawHead(ctx, h, x + 10, y + 12, 3); tx = x + 96; }
       ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-      if (h) { ctx.fillStyle = '#D4B95E'; ctx.font = '10px ' + FONT; ctx.fillText((h.name || '').toUpperCase() + ':', tx, y + 12); }
+      if (h && h.name) { ctx.fillStyle = '#D4B95E'; ctx.font = '10px ' + FONT; ctx.fillText(h.name.toUpperCase() + ':', tx, y + 12); }
       ctx.fillStyle = '#EDE4CF'; ctx.font = '14px ' + MONO;
       wrap(ctx, line.text.slice(0, Math.floor(dlg.chars)), x + w - tx - 16).slice(0, 3).forEach((l, i) => ctx.fillText(l, tx, y + 32 + i * 18));
       if (dlg.chars >= line.text.length && Math.floor(t / 400) % 2) { ctx.fillStyle = '#D4B95E'; ctx.fillText('▼', x + w - 24, y + 70); }
@@ -385,15 +524,24 @@ function PHEngineFactory(global) {
         ctx.drawImage(img, Math.round(ox), 0, Math.round(iw), 290);
         P(ctx, 'rgba(18,21,14,.18)', 0, 0, W, 290);
       } else drawBackground(ctx, lv.theme, cam, t);
-      lv.deco.forEach(d => { const sx = d.x - cam; if (sx > -80 && sx < W + 20) { const sy = surfaceY(lv, Math.floor(d.x / T)); if (sy !== null) drawDeco(ctx, d, sx, sy); } });
+      lv.deco.forEach(d => { const sx = d.x - cam; if (sx > -80 && sx < W + 20) { const sy = surfaceY(lv, Math.floor(d.x / T)); if (sy !== null) drawDeco(ctx, d, sx, sy, t); } });
       drawTerrain(ctx, lv, cam);
       // цель — партнёр
       const gsy = surfaceY(lv, Math.floor(lv.goalX / T));
       // партнёр ждёт в конце уровня; при встрече — его эмоция
-      const greet = state === 'outro' && (emoteOf(partnerHero, ['emote']) || 'wave');
-      if (greet) PX.drawAnim(ctx, greet, partnerHero, null, t, 2, lv.goalX - cam, gsy, { flip: true });
-      else PX.drawAnim(ctx, 'idle', partnerHero, null, t, 2, lv.goalX - cam, gsy, { flip: true });
-      if (state === 'play' && Math.floor(t / 400) % 2) { P(ctx, '#D4B95E', lv.goalX - cam - 4, gsy - 92, 8, 8); }
+      const goal = levels[li].goal || 'partner';
+      if (goal === 'partner') {
+        const greet = state === 'outro' && (emoteOf(partnerHero, ['emote']) || 'wave');
+        if (greet) PX.drawAnim(ctx, greet, partnerHero, null, t, 2, lv.goalX - cam, gsy, { flip: true });
+        else PX.drawAnim(ctx, 'idle', partnerHero, null, t, 2, lv.goalX - cam, gsy, { flip: true });
+      } else if (goal === 'runaway') {
+        if (!ra.gone) { const ry = surfaceY(lv, Math.min(lv.len - 1, Math.floor(ra.x / T))) || gsy; if (ra.run) PX.drawAnim(ctx, 'walk_run', partnerHero, null, t, 2, ra.x - cam, ry); else PX.drawAnim(ctx, 'idle', partnerHero, null, t, 2, ra.x - cam, ry, { flip: true }); }
+      } else {   // дверь-выход
+        const dx = lv.goalX - cam - 16;
+        P(ctx, '#2A1E16', dx - 4, gsy - 64, 40, 64); P(ctx, '#5E4530', dx, gsy - 60, 32, 60); P(ctx, '#6E5238', dx + 4, gsy - 56, 24, 24); P(ctx, '#6E5238', dx + 4, gsy - 28, 24, 24); P(ctx, '#D4B95E', dx + 25, gsy - 32, 3, 4);
+        if (Math.floor(t / 450) % 2) { ctx.font = '14px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillStyle = '#D4B95E'; ctx.fillText('→', dx + 16, gsy - 70); }
+      }
+      if (state === 'play' && goal === 'partner' && Math.floor(t / 400) % 2) { P(ctx, '#D4B95E', lv.goalX - cam - 4, gsy - 92, 8, 8); }
       lv.items.forEach(it => { if (!it.got && it.x - cam > -20 && it.x - cam < W + 20) drawMemory(ctx, it.x - cam, it.y, t); });
       // игрок: вид сбоку, выбранная походка
       const moving = Math.abs(pl.vx) > 0.3 && pl.on;
@@ -403,6 +551,7 @@ function PHEngineFactory(global) {
       else drawHero(ctx, playerHero, px, py, 2, pl.flip, 0, pl.on, 'side', !pl.on ? { legs: 'jump', armF: 'up', armB: 'swingB' } : PX.animFrame(playerHero.walk || 'walk_normal', pl.walk * 18));
       if (lv.theme.fireflies) for (let i = 0; i < 10; i++) { if (Math.sin(t / 400 + i * 2) > 0) P(ctx, '#F2E3A0', (i * 113 - cam * 0.6 % W + W * 2) % W, 60 + (i * 47) % 160 + Math.sin(t / 600 + i) * 6, 3, 3); }
       if (lv.theme.snowfall) for (let i = 0; i < 40; i++) P(ctx, '#FFFFFF', (i * 71 + t / 30 * (1 + i % 3)) % W, (i * 43 + t / 12) % H, 3, 3);
+      if (lv.theme.leaves) for (let i = 0; i < 14; i++) P(ctx, ['#E0952F', '#C0593A', '#E8C547'][i % 3], (i * 97 + t / 25 + Math.sin(t / 500 + i) * 20 + W * 2) % W, (i * 53 + t / 20) % H, 4, 3);
       worldEnd();
       // HUD
       P(ctx, '#12150E', 12, 12, 150, 28);
@@ -429,7 +578,7 @@ function PHEngineFactory(global) {
     const fontsReady = document.fonts ? Promise.race([document.fonts.load('12px "Press Start 2P"'), new Promise(r => setTimeout(r, 1500))]) : Promise.resolve();
     fontsReady.then(() => { raf = requestAnimationFrame(frame); });
 
-    return { stop() { alive = false; cancelAnimationFrame(raf); sound.music(false); removeEventListener('keydown', kd); removeEventListener('keyup', ku); } };
+    return { info() { return { level: li, state, runaway: Object.assign({}, ra) }; }, goto(i) { dlg = null; loadLevel(Math.max(0, Math.min(levels.length - 1, i))); }, stop() { alive = false; cancelAnimationFrame(raf); sound.music(false); removeEventListener('keydown', kd); removeEventListener('keyup', ku); } };
   }
 
   /* стили интерфейса игры (кнопки, масштаб) */
