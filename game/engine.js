@@ -595,7 +595,21 @@ function PHEngineFactory(global) {
 @media (orientation:portrait) and (pointer:coarse){.phg{aspect-ratio:auto;overflow:visible;background:#272E1F}.phg canvas{height:auto;aspect-ratio:16/9}.phg-touch{position:static;padding:22px 16px 18px}.phg-touch button{width:74px;height:74px;opacity:1}}`;
   if (typeof document !== 'undefined' && !document.getElementById('phg-css')) { const st = document.createElement('style'); st.id = 'phg-css'; st.textContent = css; document.head.appendChild(st); }
 
-  global.PHGame = { start, THEMES: THEME_NAMES, buildLevel };
+  // Нарисовать сцену локации без игры (превью на сайте): фон + декор + земля
+  function renderScene(ctx, name, t, opt = {}) {
+    const th = THEMES[name] || THEMES.forest, gy = opt.ground || 300, cw = ctx.canvas.width, ch = ctx.canvas.height;
+    ctx.imageSmoothingEnabled = false;
+    drawBackground(ctx, th, opt.cam || 0, t);
+    (opt.deco || []).forEach(([type, x]) => drawDeco(ctx, { type }, x, gy, t));
+    for (let x = 0; x < cw; x += T) {
+      P(ctx, th.top, x, gy, T, 8); P(ctx, th.top2, x, gy + 8, T, 4); P(ctx, (x / T) % 2 ? th.top : th.top2, x + 4, gy - 4, 4, 4);
+      for (let y = gy + 12; y < ch; y += T) P(ctx, ((x + y) / T | 0) % 2 ? th.soil : th.soil2, x, y, T, T);
+    }
+    if (th.leaves) for (let i = 0; i < 14; i++) P(ctx, ['#E0952F', '#C0593A', '#E8C547'][i % 3], (i * 97 + t / 25 + Math.sin(t / 500 + i) * 20 + cw * 2) % cw, (i * 53 + t / 20) % gy, 4, 3);
+    if (th.snowfall) for (let i = 0; i < 40; i++) P(ctx, '#FFFFFF', (i * 71 + t / 30 * (1 + i % 3)) % cw, (i * 43 + t / 12) % ch, 3, 3);
+  }
+
+  global.PHGame = { start, renderScene, THEMES: THEME_NAMES, buildLevel };
 }
 window.PHEngineFactory = PHEngineFactory;
 PHEngineFactory(window);
