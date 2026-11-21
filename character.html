@@ -19,6 +19,22 @@
   .tile .thumb canvas { width: 88px; left: -6px; top: -4px; }
   .hero-item .mini canvas { width: 66px; left: -9px; top: -3px; }
   .anim-tags .tag.on::before { content: '✓ '; }
+  .hero-item { position: relative; }
+  .hero-item .del { position: absolute; right: 6px; top: 6px; width: 26px; height: 26px; border: 2px solid var(--surface2); background: var(--bg); color: var(--muted); font-size: 12px; cursor: pointer; display: grid; place-items: center; }
+  .hero-item .del:hover { color: #FFFFFF; border-color: var(--yellow); background: var(--yellow); }
+  .swatches .own { position: relative; width: 32px; height: 32px; border: 3px dashed var(--surface2); cursor: pointer; display: grid; place-items: center; font-size: 16px; color: var(--muted); }
+  .swatches .own input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  /* редактор узора */
+  .paint { display: grid; gap: 12px; border-top: 3px solid var(--surface2); padding-top: 16px; }
+  .paint-wrap { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+  #paintCanvas { width: 240px; height: 276px; max-width: 100%; image-rendering: pixelated; background: #101018; border: 3px solid var(--surface2); cursor: crosshair; touch-action: none; }
+  .paint-tools { display: grid; gap: 10px; flex: 1; min-width: 150px; align-content: start; }
+  .paint-tools .tags .tag { font-size: 12px; }
+  .paint-pal { display: grid; grid-template-columns: repeat(6, 26px); gap: 6px; }
+  .paint-pal span { width: 26px; height: 26px; border: 2px solid #0A0A10; cursor: pointer; }
+  .paint-pal span.on { outline: 3px solid var(--yellow); outline-offset: 1px; }
+  .paint-pal label { width: 26px; height: 26px; border: 2px dashed var(--surface2); position: relative; display: grid; place-items: center; font-size: 13px; color: var(--muted); cursor: pointer; }
+  .paint-pal label input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
   @media (max-width: 520px) { .tiles { grid-template-columns: repeat(3, 1fr); } }
 </style>
 </head>
@@ -35,7 +51,7 @@
   <div class="page-head">
     <a class="back" href="create.html">← Назад к созданию игры</a>
     <h1 style="font-size:clamp(20px,3vw,28px)">Конструктор персонажа</h1>
-    <p class="muted">Начните с базовой фигуры: причёска, глаза, одежда, походка и действия. ИИ нарисует героя во всей игре именно таким.</p>
+    <p class="muted">Начните с базовой фигуры: причёска, глаза, одежда, свой узор, походка и действия. Героев может быть сколько угодно — хоть один, если история про вас. ИИ нарисует их во всей игре именно такими.</p>
   </div>
 
   <div class="ctor">
@@ -59,7 +75,7 @@
         <div style="display:flex;gap:12px;flex-wrap:wrap">
           <input class="field" id="name" style="flex:1;min-width:180px" maxlength="16">
           <label class="select"><span>Роль:</span>
-            <select id="role"><option>Главный герой</option><option>Кого ищем</option><option>Друг</option><option>Злодей (шутка)</option><option>Питомец-помощник</option></select>
+            <select id="role"><option>Главный герой</option><option>Близкий человек</option><option>Друг</option><option>Семья</option><option>Коллега</option><option>Питомец</option><option>Другое</option></select>
           </label>
         </div>
       </div>
@@ -91,17 +107,33 @@
       <div class="tab-pane" data-pane="face">
         <div class="opt-group"><b>Цвет глаз</b><div class="swatches" data-key="eyes"></div></div>
         <div class="opt-group"><b>Аксессуар</b><div class="tags" data-single data-key="acc">
-          <span class="tag" data-v="none">Нет</span><span class="tag" data-v="glasses">Очки</span><span class="tag" data-v="cap">Кепка</span><span class="tag" data-v="flower">Цветок</span><span class="tag" data-v="scarf">Шарф</span>
+          <span class="tag" data-v="none">Нет</span><span class="tag" data-v="glasses">Очки</span><span class="tag" data-v="cap">Кепка</span><span class="tag" data-v="beanie">Шапка</span><span class="tag" data-v="headphones">Наушники</span><span class="tag" data-v="flower">Цветок</span><span class="tag" data-v="scarf">Шарф</span>
         </div></div>
+        <div class="opt-group"><b>Цвет аксессуара</b><div class="swatches" data-key="accColor"></div><p class="muted small">Для кепки, шапки, шарфа и наушников.</p></div>
       </div>
 
       <div class="tab-pane" data-pane="clothes">
         <div class="opt-group"><b>Верх</b><div class="tags" data-single data-key="topType">
-          <span class="tag" data-v="none">Нет</span><span class="tag" data-v="tshirt">Футболка</span><span class="tag" data-v="hoodie">Худи</span><span class="tag" data-v="shirt">Рубашка</span><span class="tag" data-v="dress">Платье</span>
+          <span class="tag" data-v="none">Нет</span><span class="tag" data-v="tshirt">Футболка</span><span class="tag" data-v="tank">Майка</span><span class="tag" data-v="longsleeve">Лонгслив</span><span class="tag" data-v="hoodie">Худи</span><span class="tag" data-v="sweater">Свитер</span><span class="tag" data-v="shirt">Рубашка</span><span class="tag" data-v="jacket">Куртка</span><span class="tag" data-v="coat">Пальто</span><span class="tag" data-v="dress">Платье</span>
         </div><div class="swatches" data-key="top"></div></div>
         <div class="opt-group"><b>Низ</b><div class="tags" data-single data-key="bottomType">
-          <span class="tag" data-v="none">Нет</span><span class="tag" data-v="pants">Брюки</span><span class="tag" data-v="shorts">Шорты</span><span class="tag" data-v="skirt">Юбка</span>
+          <span class="tag" data-v="none">Нет</span><span class="tag" data-v="pants">Брюки</span><span class="tag" data-v="shorts">Шорты</span><span class="tag" data-v="skirt">Юбка</span><span class="tag" data-v="longskirt">Длинная юбка</span>
         </div><div class="swatches" data-key="bottom"></div></div>
+        <div class="paint" id="paint">
+          <b class="px yellow" style="font-size:11px">Свой узор на одежде</b>
+          <p class="muted small">Как скин в Майнкрафте: выберите цвет и рисуйте по клеткам одежды. Узор будет на герое во всей игре.</p>
+          <div class="paint-wrap">
+            <canvas id="paintCanvas" width="240" height="276"></canvas>
+            <div class="paint-tools">
+              <div class="tags" data-single id="paintSide"><span class="tag on" data-v="front">Перед</span><span class="tag" data-v="back">Спина</span></div>
+              <div class="tags" data-single id="paintTool"><span class="tag on" data-v="brush">Кисть</span><span class="tag" data-v="erase">Ластик</span><span class="tag" data-v="fill">Залить</span></div>
+              <label class="small" style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="paintMirror"> Зеркально</label>
+              <div class="paint-pal" id="paintPal"></div>
+              <button class="btn" id="paintClear" type="button">Стереть узор</button>
+            </div>
+          </div>
+          <p class="muted small" id="paintHint"></p>
+        </div>
       </div>
 
       <div class="tab-pane" data-pane="shoes">
@@ -121,7 +153,7 @@
   </div>
 </main>
 
-<script src="assets/pixel.js?v=17"></script>
+<script src="assets/pixel.js?v=18"></script>
 <script src="assets/app.js?v=17"></script>
 <script src="assets/api.js?v=15"></script>
 <script>
@@ -129,13 +161,15 @@ const PAL = {
   skin: ['#F3D3B5', '#F0CBA8', '#E8C39E', '#C99A6E', '#A0704A', '#7A4E30', '#4E3220'],
   hair: ['#1E1A16', '#221A14', '#5A3A26', '#8A5A2E', '#C9A25E', '#E8D7A8', '#C0593A', '#5B7A3A', '#9B8AC4', '#E39B86'],
   eyes: ['#3B2B1E', '#4A3626', '#5B7A3A', '#4A6E9C', '#8A6A3A', '#6B6B6B', '#9B8AC4'],
-  top: ['#C0593A', '#6E9145', '#D4B95E', '#4A6E9C', '#9B8AC4', '#EDE4CF', '#2A2420', '#8A5A2E', '#E39B86'],
-  bottom: ['#3E4A33', '#5E4530', '#2A2420', '#4A6E9C', '#A9A68C', '#C0593A', '#EDE4CF'],
-  shoes: [null, '#EDE4CF', '#2A2420', '#5E4530', '#C0593A', '#D4B95E']
+  top: ['#E63946', '#3D7DD8', '#F4C430', '#F1FAEE', '#1B1B28', '#2E8A7A', '#C0508A', '#9B8AC4', '#C0593A', '#6E9145', '#8A5A2E', '#E39B86'],
+  bottom: ['#2A3A5A', '#1B1B28', '#3E4A33', '#5E4530', '#4A6E9C', '#A9A68C', '#C0593A', '#F1FAEE', '#9B8AC4'],
+  shoes: [null, '#F1FAEE', '#1B1B28', '#5E4530', '#E63946', '#3D7DD8', '#F4C430'],
+  accColor: ['#E63946', '#3D7DD8', '#F4C430', '#1B1B28', '#F1FAEE', '#2E8A7A', '#C0508A', '#9B8AC4']
 };
+const ROLE_FIX = { 'Кого ищем': 'Близкий человек', 'Питомец-помощник': 'Питомец', 'Злодей (шутка)': 'Другое' };
 const BASE = () => ({ id: 'h' + Date.now(), name: 'Новый герой', role: 'Друг', skin: '#E8C39E', style: 'bald', hair: '#5A3A26', eyes: '#3B2B1E', topType: 'none', top: '#6E9145', bottomType: 'none', bottom: '#3E4A33', shoes: null, acc: 'none', walk: 'walk_normal', emotes: [] });
 
-let heroes = PH.heroes().map(h => Object.assign({ walk: 'walk_normal', emotes: [] }, h));
+let heroes = PH.heroes().map(h => Object.assign({ walk: 'walk_normal', emotes: [] }, h, h.role in ROLE_FIX ? { role: ROLE_FIX[h.role] } : {}));
 let cur = heroes.find(h => h.id === 'asem') || heroes[0];
 let view = 'front', preview = null, previewStart = 0, hairFilter = 'all';
 const $ = s => document.querySelector(s);
@@ -150,11 +184,8 @@ function drawStage(now) {
   sctx.clearRect(0, 0, W, H); sctx.imageSmoothingEnabled = false;
   const ground = H - 96;
   const a = preview && PX.ANIMS[preview];
-  // земля (при походке — едет)
-  sctx.fillStyle = '#3B2B1E'; sctx.fillRect(0, ground + 16, W, H);
-  sctx.fillStyle = '#5B7A3A'; sctx.fillRect(0, ground, W, 16);
-  const shift = a && a.kind === 'walk' ? Math.floor(ms / 1000 * a.fps * 8) % 40 : 0;
-  sctx.fillStyle = '#6E9145'; for (let x = -shift; x < W; x += 40) sctx.fillRect(x, ground - 6, 8, 6);
+  const shift = a && a.kind === 'walk' ? Math.floor(ms / 1000 * a.fps * 8) % 48 : 0;
+  drawStudio(W, H, ground, shift);
   const s = Math.max(4, Math.floor(Math.min(W / 44, (ground - 20) / 40)));
   if (a && a.kind === 'duo') PX.drawAnim(sctx, preview, cur, partnerOf(cur), ms, s, W / 2, ground);
   else if (a && a.kind === 'walk') PX.drawAnim(sctx, preview, cur, null, ms, s, W / 2, ground);
@@ -164,6 +195,21 @@ function drawStage(now) {
   requestAnimationFrame(drawStage);
 }
 requestAnimationFrame(drawStage);
+// нейтральная «студия» в стиле сайта: тёмный фон с пиксельной сеткой, луч света и подиум
+function drawStudio(W, H, ground, shift) {
+  const R = (c, x, y, w, h) => { sctx.fillStyle = c; sctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
+  R('#14141F', 0, 0, W, H);
+  for (let x = (W / 2) % 24; x < W; x += 24) R('#1B1B2A', x, 0, 2, ground);
+  for (let y = ground % 24; y < ground; y += 24) R('#1B1B2A', 0, y, W, 2);
+  for (let k = 0; k < 8; k++) { const w = 70 + k * 26; R('rgba(244,196,48,' + (0.018) + ')', W / 2 - w / 2, 0, w, ground); }
+  R('#101018', 0, ground, W, H - ground);
+  for (let y = ground + 10, i = 0; y < H; y += 12 + i * 4, i++) R('#1B1B28', 0, y, W, 2);
+  for (let x = -shift; x < W + 48; x += 48) R('#1B1B28', x, ground, 2, H - ground);
+  const cx = W / 2, rx = Math.min(W * 0.32, 150);
+  for (let dy = -14; dy <= 14; dy += 2) { const w = Math.round(rx * Math.sqrt(1 - (dy / 15) * (dy / 15))); R(dy < -10 ? '#4A4A66' : '#2A2A3E', cx - w, ground + dy + 4, w * 2, 2); }
+  for (let dy = -14; dy <= 14; dy += 2) { const w = Math.round(rx * Math.sqrt(1 - (dy / 15) * (dy / 15))); R('#34344C', cx - w, ground + dy + 10, 3, 2); R('#34344C', cx + w - 3, ground + dy + 10, 3, 2); }
+  R('rgba(244,196,48,.35)', cx - rx * 0.7, ground - 10, rx * 1.4, 2);
+}
 function play(id) { preview = id; previewStart = performance.now(); $('#nowPlaying').hidden = !id; if (id) $('#nowPlaying').textContent = '▶ ' + PX.ANIMS[id].name; }
 
 /* ---------- список героев ---------- */
@@ -178,6 +224,15 @@ function renderList() {
     el.querySelector('small').textContent = h === cur ? 'редактируется' : h.role;
     PX.renderChar(el.querySelector('canvas'), h, 1);
     el.onclick = () => { cur = h; play(null); syncAll(); };
+    const del = document.createElement('button'); del.className = 'del'; del.type = 'button'; del.title = 'Удалить героя'; del.textContent = '✕';
+    del.onclick = e => {
+      e.stopPropagation();
+      if (heroes.length < 2) { $('#saved').textContent = 'Нужен хотя бы один герой — его можно изменить.'; return; }
+      if (!confirm('Удалить героя «' + (h.name || 'Герой') + '»?')) return;
+      heroes = heroes.filter(x => x !== h); if (cur === h) cur = heroes[0];
+      PH.store.set('heroes', heroes); play(null); syncAll();
+    };
+    el.appendChild(del);
     list.appendChild(el);
   });
   const add = document.createElement('div');
@@ -205,7 +260,19 @@ function buildSwatches() {
       };
       box.appendChild(s);
     });
+    const own = document.createElement('label'); own.className = 'own'; own.title = 'Свой цвет'; own.innerHTML = '+<input type="color">';
+    const inp = own.querySelector('input'); inp.value = /^#[0-9a-f]{6}$/i.test(cur[key] || '') ? cur[key] : '#888888';
+    if (cur[key] && !PAL[key].includes(cur[key])) { own.style.background = cur[key]; own.style.borderStyle = 'solid'; own.style.borderColor = 'var(--yellow)'; own.firstChild.textContent = ''; }
+    inp.addEventListener('change', () => applyColor(key, inp.value));
+    box.appendChild(own);
   });
+}
+function applyColor(key, c) {
+  cur[key] = c; cur.mannequin = false;
+  if (key === 'top' && (!cur.topType || cur.topType === 'none')) cur.topType = 'tshirt';
+  if (key === 'bottom' && (!cur.bottomType || cur.bottomType === 'none')) cur.bottomType = 'pants';
+  if (key === 'hair' && (!cur.style || cur.style === 'bald')) cur.style = 'short';
+  play(null); syncAll();
 }
 function buildHair() {
   const box = $('#hairTiles'); box.innerHTML = '';
@@ -248,8 +315,54 @@ function syncAll() {
   $('#name').value = cur.name || '';
   $('#role').value = cur.role || 'Друг';
   $('#stageName').textContent = (cur.name || 'Герой').toUpperCase();
-  buildSwatches(); buildHair(); buildAnims(); syncTags(); renderList();
+  buildSwatches(); buildHair(); buildAnims(); syncTags(); renderList(); drawPaint();
 }
+
+/* ---------- свой узор на одежде (как скин в Майнкрафте) ---------- */
+const pcv = $('#paintCanvas'), pctx = pcv.getContext('2d'), PS = 12, OX = 2, OY = 13;   // клетка 12px, видно туловище и ноги
+const PAINT_PAL = ['#F1FAEE', '#1B1B28', '#E63946', '#3D7DD8', '#F4C430', '#2E8A7A', '#C0508A', '#9B8AC4', '#FF8A3D', '#6FE38A', '#8A5A2E', '#A8B2C1'];
+let pSide = 'front', pTool = 'brush', pColor = '#F1FAEE', pDown = false;
+// клетки, на которых есть одежда (верх — торс, низ — подол платья/пальто/юбки)
+function paintMask() {
+  const m = new Set(), top = cur.topType && cur.topType !== 'none' ? cur.topType : null;
+  const add = (x0, x1, y0, y1) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) m.add(x + ',' + y); };
+  if (top) { add(9, 15, 18, 18); add(8, 16, 19, 25); }
+  const hem = top === 'dress' || top === 'coat' || ['skirt', 'longskirt'].includes(cur.bottomType) && top !== 'dress';
+  if (hem) { const end = top === 'coat' ? 30 : top === 'dress' ? 29 : cur.bottomType === 'longskirt' ? 32 : 29; add(8, 16, 26, 26); for (let y = 27; y <= end; y++) add(y > 30 ? 6 : 7, y > 30 ? 18 : 17, y, y); }
+  return m;
+}
+function drawPaint() {
+  const W = pcv.width, H = pcv.height;
+  pctx.imageSmoothingEnabled = false; pctx.fillStyle = '#101018'; pctx.fillRect(0, 0, W, H);
+  PX.drawPose(pctx, cur, PS, -OX * PS, -OY * PS, pSide, null, false);
+  const m = paintMask();
+  pctx.fillStyle = 'rgba(255,255,255,.14)';
+  m.forEach(k => { const [x, y] = k.split(',').map(Number); const px = (x - OX) * PS, py = (y - OY) * PS; pctx.fillRect(px, py, PS, 1); pctx.fillRect(px, py, 1, PS); });
+  $('#paintHint').textContent = m.size ? 'Рисовать можно по светлой сетке — это одежда. ' + (pSide === 'front' ? 'Сбоку герой покажет перед.' : '') : 'Сначала выберите верх (футболку, худи…) или платье, юбку — и рисуйте на них.';
+  const pal = $('#paintPal');
+  if (!pal.childElementCount) {
+    PAINT_PAL.forEach(c => { const s = document.createElement('span'); s.style.background = c; s.dataset.c = c; s.onclick = () => { pColor = c; markPal(); }; pal.appendChild(s); });
+    const own = document.createElement('label'); own.title = 'Свой цвет'; own.innerHTML = '+<input type="color" value="#FF8A3D">';
+    own.querySelector('input').addEventListener('input', e => { pColor = e.target.value; own.style.background = pColor; markPal(); }); pal.appendChild(own);
+  }
+  markPal();
+}
+function markPal() { $('#paintPal').querySelectorAll('span').forEach(s => s.classList.toggle('on', s.dataset.c === pColor)); }
+function paintAt(e) {
+  const r = pcv.getBoundingClientRect(), x = Math.floor(((e.clientX - r.left) * pcv.width / r.width) / PS) + OX, y = Math.floor(((e.clientY - r.top) * pcv.height / r.height) / PS) + OY;
+  const m = paintMask(); if (!m.has(x + ',' + y) && pTool !== 'fill') return;
+  cur.paint = cur.paint || {}; const side = cur.paint[pSide] = cur.paint[pSide] || {};
+  if (pTool === 'fill') { if (!m.size) return; m.forEach(k => side[k] = pColor); }
+  else [x, $('#paintMirror').checked ? 24 - x : null].forEach(xx => { if (xx === null || !m.has(xx + ',' + y)) return; if (pTool === 'erase') delete side[xx + ',' + y]; else side[xx + ',' + y] = pColor; });
+  cur.mannequin = false; drawPaint(); renderListSoon();
+}
+let listT = 0; function renderListSoon() { clearTimeout(listT); listT = setTimeout(renderList, 250); }
+pcv.addEventListener('pointerdown', e => { e.preventDefault(); pDown = true; pcv.setPointerCapture(e.pointerId); paintAt(e); });
+pcv.addEventListener('pointermove', e => { if (pDown && pTool !== 'fill') paintAt(e); });
+['pointerup', 'pointercancel'].forEach(ev => pcv.addEventListener(ev, () => { pDown = false; }));
+$('#paintSide').addEventListener('pick', e => { pSide = e.detail; view = e.detail; document.querySelectorAll('#views .tag').forEach(t => t.classList.toggle('on', t.dataset.v === view)); drawPaint(); });
+$('#paintTool').addEventListener('pick', e => { pTool = e.detail; });
+$('#paintClear').onclick = () => { if (cur.paint && cur.paint[pSide]) delete cur.paint[pSide]; drawPaint(); renderList(); };
 
 document.querySelectorAll('.editor .tags[data-key]').forEach(g => {
   g.addEventListener('pick', e => { cur[g.dataset.key] = e.detail; cur.mannequin = false; play(null); syncAll(); });
@@ -259,13 +372,13 @@ $('#views').addEventListener('pick', e => { view = e.detail; play(null); });
 $('#hairFilter').addEventListener('pick', e => { hairFilter = e.detail; buildHair(); });
 $('#name').addEventListener('input', e => { cur.name = e.target.value; $('#stageName').textContent = (cur.name || 'Герой').toUpperCase(); renderList(); });
 $('#role').addEventListener('change', e => { cur.role = e.target.value; renderList(); });
-$('#reset').onclick = () => { Object.assign(cur, BASE(), { id: cur.id, name: cur.name, role: cur.role }); play(null); syncAll(); };
+$('#reset').onclick = () => { Object.assign(cur, BASE(), { id: cur.id, name: cur.name, role: cur.role, paint: null, accColor: null }); play(null); syncAll(); };
 $('#random').onclick = () => {
   const pick = a => a[Math.floor(Math.random() * a.length)];
   Object.assign(cur, {
     skin: pick(PAL.skin), hair: pick(PAL.hair), style: pick(PX.HAIR.slice(1))[0], eyes: pick(PAL.eyes),
-    topType: pick(['tshirt', 'hoodie', 'shirt', 'dress']), top: pick(PAL.top), bottomType: pick(['pants', 'shorts', 'skirt']), bottom: pick(PAL.bottom),
-    shoes: pick(PAL.shoes.slice(1)), acc: pick(['none', 'none', 'glasses', 'cap', 'flower', 'scarf']), walk: pick(PX.WALKS), mannequin: false
+    topType: pick(['tshirt', 'tank', 'longsleeve', 'hoodie', 'sweater', 'shirt', 'jacket', 'coat', 'dress']), top: pick(PAL.top), bottomType: pick(['pants', 'shorts', 'skirt', 'longskirt']), bottom: pick(PAL.bottom),
+    shoes: pick(PAL.shoes.slice(1)), acc: pick(['none', 'none', 'glasses', 'cap', 'beanie', 'headphones', 'flower', 'scarf']), accColor: pick(PAL.accColor), walk: pick(PX.WALKS), mannequin: false, paint: null
   });
   play(null); syncAll();
 };

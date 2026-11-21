@@ -111,7 +111,9 @@ function PXFactory(global) {
     const hd = (o.hair && o.style && o.style !== 'bald') ? HAIRDEF[o.style] || HAIRDEF.short : null;
     const h = o.hair || '#222222', hD = shade(h, 0.66), hL = shade(h, 1.45);
     const eye = o.eyes || '#3B2B1E', eyeD = shade(eye, 0.55), DARK = '#241A14';
-    const sleeve = !top ? 0 : (top === 'hoodie' || top === 'shirt') ? 0.8 : 0.38;
+    const LONG = ['hoodie', 'shirt', 'longsleeve', 'sweater', 'jacket', 'coat'];
+    const sleeve = !top || top === 'tank' ? 0 : LONG.includes(top) ? 0.8 : 0.38;
+    const AC = o.accColor || null;   // цвет аксессуара (кепка, шапка, шарф, наушники)
 
     // толстая линия по точкам (руки, ноги); col(t) — цвет по доле длины 0..1
     function line(pts, th, col, pad) {
@@ -285,6 +287,17 @@ function PXFactory(global) {
       }
     }
 
+    // ---- свой узор на одежде (рисует пользователь в конструкторе)
+    function applyPaint(y0, y1) {
+      const src = o.paint && (view === 'back' ? o.paint.back : o.paint.front); if (!src) return;
+      for (const k in src) {
+        const i = k.indexOf(','), x = +k.slice(0, i), y = +k.slice(i + 1);
+        if (y < y0 || y > y1) continue;
+        if (view === 'side') { if (x < 8 || x > 16) continue; set(9 + Math.round((x - 8) * 6 / 8), y, src[k]); }
+        else set(x, y, src[k]);
+      }
+    }
+
     // ---- тело и одежда
     function torso() {
       const [a, z] = view === 'side' ? [9, 15] : [8, 16];
@@ -300,6 +313,26 @@ function PXFactory(global) {
           if (view === 'front') { set(12, 19, BONE); set(12, 20, BONE); set(14, 19, BONE); set(14, 20, BONE); R(10, 14, 23, 24, tD); }
           if (view === 'back') R(9, 15, 18, 21, tD);
         }
+        if (top === 'tank') {   // майка: открытые плечи и вырез
+          if (view === 'front') { R(9, 15, 18, 18, sk); R(10, 14, 19, 19, sk); set(9, 18, t); set(15, 18, t); }
+          else if (view === 'side') R(10, 14, 18, 18, sk);
+          else { R(9, 15, 18, 18, sk); set(9, 18, t); set(15, 18, t); }
+        }
+        if (top === 'longsleeve' && view === 'front') { set(12, 18, skD); set(13, 18, skD); }
+        if (top === 'sweater') {   // свитер: воротник-резинка и вязка
+          if (view !== 'side') R(9, 15, 18, 18, tD); else R(10, 14, 18, 18, tD);
+          for (let y = 20; y <= 24; y++) for (let x = a + 1; x < z; x++) if ((x + y * 2) % 4 === 0) set(x, y, tL);
+          R(a, z, 25, 25, tD);
+        }
+        if (top === 'jacket' || top === 'coat') {   // куртка / пальто: распахнута, внутри светлая футболка
+          if (view === 'front') {
+            if (top === 'jacket') { R(12, 13, 18, 25, BONE); for (let y = 19; y <= 25; y += 2) set(12, y, '#A8B2C1'); }
+            else { set(12, 18, skD); for (let y = 19; y <= 25; y++) set(12, y, tD); set(13, 20, GOLD); set(13, 23, GOLD); }
+            set(10, 18, tD); set(15, 18, tD); set(11, 19, tD); set(14, 19, tD);
+          } else if (view === 'side') { set(14, 18, tD); for (let y = 19; y <= 25; y++) set(14, y, tD); }
+          else R(9, 15, 18, 18, tD);
+        }
+        applyPaint(18, 25);
       }
       if (bot) { const [p, q] = view === 'side' ? [9, 15] : [8, 16]; R(p, q, 25, 25, '#3B2B1E'); if (view !== 'back') set(view === 'side' ? 14 : 13, 25, GOLD); }
     }
@@ -309,10 +342,11 @@ function PXFactory(global) {
       if (view === 'side') { R(7, 10, 14, 19, tD); }
     }
     function skirt() {
-      const col = top === 'dress' ? t : (bot === 'skirt' ? b : null); if (!col) return;
-      const dk = shade(col, 0.72);
-      if (view === 'side') { R(9, 15, 26, 26, col); R(8, 16, 27, 29, col); R(8, 16, 29, 29, dk); R(8, 8, 27, 28, dk); }
-      else { R(8, 16, 26, 26, col); R(7, 17, 27, 29, col); R(7, 17, 29, 29, dk); R(7, 7, 27, 28, dk); }
+      const coat = top === 'coat', col = top === 'dress' || coat ? t : (bot === 'skirt' || bot === 'longskirt' ? b : null); if (!col) return;
+      const dk = shade(col, 0.72), end = coat ? 30 : (col === b && bot === 'longskirt') ? 32 : 29;
+      if (view === 'side') { R(9, 15, 26, 26, col); for (let y = 27; y <= end; y++) R(8 - (y > 30 ? 1 : 0), 16, y, y, col); R(8, 16, end, end, dk); R(8, 8, 27, end - 1, dk); if (coat) for (let y = 26; y < end; y++) set(14, y, dk); }
+      else { R(8, 16, 26, 26, col); for (let y = 27; y <= end; y++) R(7 - (y > 30 ? 1 : 0), 17 + (y > 30 ? 1 : 0), y, y, col); R(7, 17, end, end, dk); R(7, 7, 27, end - 1, dk); if (coat && view === 'front') for (let y = 26; y < end; y++) set(12, y, dk); }
+      applyPaint(26, 33);
     }
     function acc() {
       if (o.acc === 'glasses') {
@@ -323,15 +357,29 @@ function PXFactory(global) {
         if (view === 'back') { set(5, 9, gl); set(19, 9, gl); }
       }
       if (o.acc === 'cap' || o.acc === 'mushroom') {          // кепка (старое значение mushroom тоже рисуем кепкой)
-        const cc = o.capColor || '#E63946', cd = shade(cc, -0.3);
+        const cc = AC || o.capColor || '#E63946', cd = shade(cc, -0.3);
         R(8, 16, 0, 0, cc); R(6, 18, 1, 3, cc); R(6, 18, 4, 4, cd); set(12, 1, shade(cc, 0.3));
         if (view === 'front') R(15, 21, 5, 5, cd);
         if (view === 'side') R(16, 22, 5, 5, cd);
       }
       if (o.acc === 'flower') { const fx = view === 'back' ? 16 : 7; set(fx, 3, '#E39B86'); set(fx - 1, 4, '#E39B86'); set(fx + 1, 4, '#E39B86'); set(fx, 5, '#E39B86'); set(fx, 4, '#F2E3A0'); }
       if (o.acc === 'scarf') {
-        if (view === 'side') { R(10, 15, 17, 18, GOLD); R(8, 9, 18, 21, '#B89A45'); }
-        else { R(8, 16, 17, 18, GOLD); if (view === 'front') R(14, 15, 19, 22, '#B89A45'); }
+        const sc = AC || GOLD, sd = shade(sc, 0.8);
+        if (view === 'side') { R(10, 15, 17, 18, sc); R(8, 9, 18, 21, sd); }
+        else { R(8, 16, 17, 18, sc); if (view === 'front') R(14, 15, 19, 22, sd); }
+      }
+      if (o.acc === 'beanie') {   // шапка с помпоном
+        const c = AC || '#3D7DD8', d = shade(c, 0.72), l = shade(c, 1.2);
+        R(11, 13, 0, 0, BONE); R(8, 16, 1, 1, c); R(6, 18, 2, 4, c); R(6, 18, 5, 6, d);
+        for (let x = 6; x <= 18; x += 2) set(x, 5, l);
+        set(10, 2, l); set(11, 2, l);
+      }
+      if (o.acc === 'headphones') {
+        const c = AC || '#2A2A33', l = shade(c, 1.5);
+        R(8, 16, 0, 0, c); set(7, 1, c); set(17, 1, c);
+        if (view === 'front') { R(5, 6, 2, 8, c); R(18, 19, 2, 8, c); R(4, 6, 9, 13, c); R(18, 20, 9, 13, c); set(5, 10, l); set(19, 10, l); }
+        else if (view === 'side') { R(9, 10, 1, 8, c); R(8, 12, 9, 13, c); set(9, 10, l); }
+        else { R(5, 6, 2, 8, c); R(18, 19, 2, 8, c); R(4, 6, 9, 13, c); R(18, 20, 9, 13, c); }
       }
     }
 
@@ -488,7 +536,7 @@ function PXFactory(global) {
 
   /* ---------- Готовые герои ---------- */
   const HEROES = {
-    asem: { name: 'Асем', role: 'Кого ищем', skin: '#F0CBA8', hair: '#5A3A26', style: 'long', eyes: '#5B7A3A', top: '#C0593A', topType: 'hoodie', bottom: '#3E4A33', bottomType: 'pants', shoes: '#EDE4CF', acc: 'none', walk: 'walk_bouncy', emotes: ['wave', 'air_kiss', 'hug'] },
+    asem: { name: 'Асем', role: 'Близкий человек', skin: '#F0CBA8', hair: '#5A3A26', style: 'long', eyes: '#5B7A3A', top: '#C0593A', topType: 'hoodie', bottom: '#3E4A33', bottomType: 'pants', shoes: '#EDE4CF', acc: 'none', walk: 'walk_bouncy', emotes: ['wave', 'air_kiss', 'hug'] },
     you: { name: 'Вы', role: 'Главный герой', skin: '#C99A6E', hair: '#221A14', style: 'curtains', eyes: '#4A3626', top: '#3D7DD8', topType: 'tshirt', bottom: '#5E4530', bottomType: 'pants', shoes: '#2A2420', acc: 'none', walk: 'walk_normal', emotes: ['wave', 'hug'] },
     base: { name: 'Новый герой', role: 'Друг', skin: '#C9B994', mannequin: true }
   };

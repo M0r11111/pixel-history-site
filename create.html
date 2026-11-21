@@ -169,11 +169,11 @@
 
 <div class="modal" id="soon"><div class="panel hot"><h3>Скоро</h3><p class="muted small">Это прототип сайта — эта кнопка заработает, когда подключим генерацию игр.</p><button class="btn" data-close>Понятно</button></div></div>
 
-<script src="assets/pixel.js?v=17"></script>
+<script src="assets/pixel.js?v=18"></script>
 <script src="assets/app.js?v=17"></script>
 <script src="assets/api.js?v=15"></script>
 <script src="game/scenes.js?v=1"></script>
-<script src="game/engine.js?v=19"></script>
+<script src="game/engine.js?v=21"></script>
 <script>
 const $ = s => document.querySelector(s);
 const PLANS = {
@@ -216,7 +216,13 @@ function renderHeroes() {
     const c = document.createElement('div'); c.className = 'hero-card';
     c.innerHTML = `<div class="portrait"><canvas></canvas></div><b class="px" style="font-size:12px"></b><span class="moss small"></span><a class="btn" href="character.html">Изменить</a>`;
     c.querySelector('b').textContent = h.name; c.querySelector('span').textContent = h.role;
-    PX.renderChar(c.querySelector('canvas'), h, 1); box.appendChild(c);
+    PX.renderChar(c.querySelector('canvas'), h, 1);
+    if (state.heroes.length > 1) {   // героя можно убрать из истории (соло-история — тоже ок)
+      const del = document.createElement('button'); del.type = 'button'; del.className = 'btn'; del.textContent = 'Убрать';
+      del.onclick = () => { if (!confirm('Убрать героя «' + h.name + '» из этой игры?')) return; state.heroes = state.heroes.filter(x => x !== h); PH.store.set('heroes', state.heroes); renderHeroes(); typeof renderSummary === 'function' && renderSummary(); };
+      c.appendChild(del);
+    }
+    box.appendChild(c);
   });
   const add = document.createElement('a'); add.className = 'hero-card add'; add.href = 'character.html';
   add.innerHTML = '<span class="px" style="font-size:28px">+</span><span class="small">Новый герой</span>'; box.appendChild(add);
@@ -307,7 +313,7 @@ function titleScreen(ctx, t, withTitle) {
     if (Math.floor(t / 600) % 2) { ctx.font = '12px "Press Start 2P"'; ctx.fillText('НАЖМИ СТАРТ', 320, 350); }
   }
 }
-function gameTitle() { const her = state.heroes.find(h => h.role === 'Кого ищем') || state.heroes[1] || state.heroes[0]; return ('ИГРА ДЛЯ ' + (her ? her.name : '')).toUpperCase(); }
+function gameTitle() { const her = state.heroes.find(h => ['Близкий человек', 'Кого ищем'].includes(h.role)) || state.heroes[1]; return (her ? 'ИГРА ДЛЯ ' + her.name : 'ИСТОРИЯ ' + ((state.heroes[0] || {}).name || '')).toUpperCase(); }
 const pctx = $('#preview').getContext('2d');
 (function loop(t) { if (!$('#builder').hidden) titleScreen(pctx, t || 0, false); requestAnimationFrame(loop); })();
 
@@ -345,7 +351,7 @@ function guessTheme(text, i) { for (const [re, th] of THEME_WORDS) if (re.test(t
 function buildGame() {
   const hs = state.heroes.map(h => Object.assign({}, h));
   const player = hs.find(h => h.role === 'Главный герой') || hs[0];
-  const partner = hs.find(h => h !== player && h.role === 'Кого ищем') || hs.find(h => h !== player) || hs[0];
+  const partner = hs.find(h => h !== player && ['Близкий человек', 'Кого ищем'].includes(h.role)) || hs.find(h => h !== player) || player;
   const sentences = state.story.split(/(?<=[.!?…])\s+/).map(x => x.trim()).filter(x => x.length > 8);
   const moments = state.moments.filter(m => m[0] || m[1]);
   if (!moments.length) moments.push(['Наша история', 'Где всё началось']);
@@ -375,7 +381,7 @@ function buildGame() {
 let gameId = null, game = null, testRun = null;
 function showReady() {
   $('#gen').hidden = true; $('#ready').hidden = false; window.scrollTo(0, 0);
-  const partner = state.heroes.find(h => h.role === 'Кого ищем') || state.heroes[1] || state.heroes[0];
+  const partner = state.heroes.find(h => ['Близкий человек', 'Кого ищем'].includes(h.role)) || state.heroes[1] || state.heroes[0];
   const player = state.heroes.find(h => h.role === 'Главный герой') || state.heroes[0];
   if (!$('#from').value && player.name !== 'Вы') $('#from').value = player.name;
   if (!$('#card').value) $('#card').value = partner.name + ', это маленькая игра про нас. Пройди её до конца — там тебя кое-что ждёт :)';

@@ -360,11 +360,13 @@ function PHEngineFactory(global) {
   function toChapter(L, i, playerId, partnerId, partnerName) {
     if (L.script) return Object.assign({ width: 1400, props: [], actors: [] }, L);
     // совместимость: старый формат → сценарий «подойди и вспомни»
-    const mems = L.memories || [], width = Math.max(1200, 520 + mems.length * 300), goal = L.goal || 'partner';
+    let mems = L.memories || [], width = Math.max(1200, 520 + mems.length * 300), goal = L.goal || 'partner';
     const props = mems.map((m, k) => ({ id: 'm' + k, type: 'memory', x: 380 + k * 300 }));
     const actors = [], script = [{ say: L.intro || [] }];
     mems.forEach((m, k) => script.push({ goal: 'Найди воспоминание', at: 'm' + k }, { memory: m.text || m, who: m.who }, { take: 'm' + k }));
-    if (goal === 'exit') { props.push({ id: 'door', type: 'door', x: width - 120 }); script.push({ goal: 'Иди дальше', at: 'door' }); }
+    if (partnerId === playerId && goal !== 'exit') goal = 'solo';
+    if (goal === 'solo') script.push({ goal: 'Иди дальше', toX: width - 80 });
+    else if (goal === 'exit') { props.push({ id: 'door', type: 'door', x: width - 120 }); script.push({ goal: 'Иди дальше', at: 'door' }); }
     else if (goal === 'runaway') {
       actors.push({ id: partnerId, x: width - 180, show: true, flip: true });
       script.push({ goal: 'Подойди к ' + partnerName, near: partnerId, dist: 280 });
@@ -564,8 +566,8 @@ function PHEngineFactory(global) {
       P(ctx, '#EDE4CF', 150, 40, 340, 4); P(ctx, '#EDE4CF', 150, 236, 340, 4); P(ctx, '#EDE4CF', 150, 40, 4, 200); P(ctx, '#EDE4CF', 486, 40, 4, 200);
       if (Math.floor(api.t / 500) % 2) { P(ctx, '#E63946', 166, 54, 10, 10); txt(ctx, 'REC', 182, 54, 10, '#E63946', FONT); }
       const an = m.animT > 0 ? m.anim : 'idle';
-      PX.drawAnim(ctx, an, api.player, null, api.t, 3, 272, 232);
-      PX.drawAnim(ctx, an, api.partner, null, api.t + 300, 3, 368, 232, { flip: true });
+      if (api.partner === api.player || !api.partner) PX.drawAnim(ctx, an, api.player, null, api.t, 3, 320, 232);
+      else { PX.drawAnim(ctx, an, api.player, null, api.t, 3, 272, 232); PX.drawAnim(ctx, an, api.partner, null, api.t + 300, 3, 368, 232, { flip: true }); }
       if (m.msg) txt(ctx, m.msg, W / 2, 250, 13, '#F4C430', MONO, 'center');
       for (let i = 0; i < 3; i++) { const on = i === m.need && m.animT <= 0; P(ctx, on ? '#F4C430' : '#2E2E46', 200 + i * 90, 300, 70, 46); if (i === 2) actGlyph(ctx, 235 + i * 90, 318, on ? '#12121C' : '#A8B2C1'); else txt(ctx, POSE_KEYS[i][1], 235 + i * 90, 314, 16, on ? '#12121C' : '#A8B2C1', FONT, 'center'); }
       txt(ctx, 'Жми подсвеченную кнопку', W / 2, 284, 11, '#EDE4CF', MONO, 'center');
@@ -842,8 +844,8 @@ function PHEngineFactory(global) {
       if (state === 'title') {
         const th = THEMES[chapters[0] ? chapters[0].theme : 'forest'];
         if (!drawBackground(ctx, th, t / 15, t, 280)) for (let x = 0; x < W; x += T) { P(ctx, th.top, x, 280, T, 8); P(ctx, th.soil, x, 288, T, 72); }
-        PX.drawAnim(ctx, 'idle', playerHero, null, t, 3, W / 2 - 44, 280);
-        PX.drawAnim(ctx, 'idle', partnerHero, null, t + 700, 3, W / 2 + 44, 280, { flip: true });
+        if (pId === partId) PX.drawAnim(ctx, 'idle', playerHero, null, t, 3, W / 2, 280);
+        else { PX.drawAnim(ctx, 'idle', playerHero, null, t, 3, W / 2 - 44, 280); PX.drawAnim(ctx, 'idle', partnerHero, null, t + 700, 3, W / 2 + 44, 280, { flip: true }); }
         worldEnd();
         P(ctx, 'rgba(16,16,26,.72)', 0, 34, W, 110);
         centerText((game.title || 'ИГРА').toUpperCase(), 62, game.title && game.title.length > 18 ? 16 : 24, '#F4C430');
@@ -854,8 +856,9 @@ function PHEngineFactory(global) {
       if (state === 'finale') {
         drawBackground(ctx, THEMES.night, t / 25, t);
         for (let x = 0; x < W; x += T) { P(ctx, '#3E5E4A', x, 300, T, 8); P(ctx, '#2A2420', x, 308, T, 52); }
-        const duo = emoteOf(playerHero, ['duo']) || emoteOf(partnerHero, ['duo']);
-        if (duo) PX.drawAnim(ctx, duo, playerHero, partnerHero, t, 3, W / 2, 300);
+        const duo = pId !== partId && (emoteOf(playerHero, ['duo']) || emoteOf(partnerHero, ['duo']));
+        if (pId === partId) PX.drawAnim(ctx, emoteOf(playerHero, ['emote']) || 'idle', playerHero, null, t, 3, W / 2, 300);
+        else if (duo) PX.drawAnim(ctx, duo, playerHero, partnerHero, t, 3, W / 2, 300);
         else { PX.drawAnim(ctx, 'idle', playerHero, null, t, 3, W / 2 - 40, 300); PX.drawAnim(ctx, 'idle', partnerHero, null, t + 700, 3, W / 2 + 40, 300, { flip: true }); }
         for (let i = 0; i < 12; i++) { const hx = (i * 61 + t / 20) % W, hy = (i * 37 + t / 15) % 300; P(ctx, '#C0593A', hx, hy, 6, 6); }
         worldEnd();
