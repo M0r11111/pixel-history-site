@@ -10,12 +10,64 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css?v=15">
 <link id="site-theme" rel="stylesheet" href="assets/retro.css?v=3">
+<style>
+  /* плашка «до праздника» */
+  .holiday { background: var(--yellow); color: #FFFFFF; text-align: center; padding: 10px 16px; font-size: 14px; font-weight: 700; }
+  .holiday b { font-family: var(--pixel); font-size: 11px; letter-spacing: .04em; }
+  .holiday a { color: #FFFFFF; text-decoration: underline; margin-left: 8px; }
+  /* из чего состоит игра */
+  .parts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+  .part { background: var(--surface); border: 4px solid var(--surface2); padding: 18px; display: grid; gap: 10px; align-content: start; }
+  .part canvas { width: 48px; height: 48px; background: var(--surface2); padding: 6px; image-rendering: pixelated; }
+  .part b { font-family: var(--pixel); font-size: 10px; line-height: 1.6; color: var(--moss); }
+  .part span { color: var(--muted); font-size: 14px; }
+  .minis { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+  .minis span { border: 3px solid var(--surface2); padding: 8px 12px; font-size: 13px; }
+  .minis span i { font-style: normal; color: var(--moss); margin-right: 6px; }
+  /* поводы */
+  .occ { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 56px; }
+  .occ a { background: var(--surface); border: 4px solid var(--surface2); padding: 18px 20px; display: grid; gap: 6px; color: var(--text); text-decoration: none; transition: transform .1s; }
+  .occ a:hover { transform: translate(-3px, -3px); border-color: var(--moss); box-shadow: 6px 6px 0 var(--rust); }
+  .occ a b { font-family: var(--pixel); font-size: 11px; color: var(--moss); }
+  .occ a span { color: var(--muted); font-size: 14px; }
+  /* калькулятор */
+  .calc { margin-top: 48px; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 28px; }
+  .calc .rows { display: grid; gap: 16px; }
+  .calc .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .calc .row > span { color: var(--muted); font-size: 14px; }
+  .step { display: flex; align-items: center; border: 3px solid var(--surface2); }
+  .step button { width: 38px; height: 38px; background: var(--surface2); color: var(--text); border: 0; font-family: var(--pixel); font-size: 14px; cursor: pointer; }
+  .step output { min-width: 46px; text-align: center; font-weight: 700; }
+  .calc .seg { display: flex; flex-wrap: wrap; gap: 8px; }
+  .calc .seg button { border: 3px solid var(--surface2); background: none; color: var(--text); padding: 8px 12px; cursor: pointer; font: inherit; font-size: 13px; }
+  .calc .seg button.on { border-color: var(--moss); color: var(--moss); }
+  .calc .total { display: grid; gap: 12px; align-content: start; }
+  .calc .sum { font-family: var(--pixel); font-size: clamp(20px, 3vw, 28px); color: var(--moss); }
+  .calc .per { color: var(--text); font-weight: 700; }
+  .calc .note { color: var(--muted); font-size: 13px; }
+  /* гарантии */
+  .guar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; margin-top: 48px; }
+  .guar div { border: 4px dashed var(--surface2); padding: 18px; display: grid; gap: 8px; }
+  .guar b { font-family: var(--pixel); font-size: 10px; line-height: 1.6; }
+  .guar span { color: var(--muted); font-size: 14px; }
+  /* закреплённая кнопка на телефоне */
+  .sticky-cta { display: none; }
+  @media (max-width: 760px) {
+    .parts, .guar { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .occ, .calc { grid-template-columns: minmax(0, 1fr); }
+    .sticky-cta { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 16px; background: var(--ink); border-top: 3px solid var(--yellow); transform: translateY(110%); transition: transform .2s; }
+    .sticky-cta.show { transform: none; }
+    .sticky-cta span { font-size: 13px; color: var(--muted); } .sticky-cta b { color: var(--text); }
+    body { padding-bottom: 68px; }
+  }
+  @media (max-width: 420px) { .parts, .guar { grid-template-columns: minmax(0, 1fr); } }
+</style>
 </head>
 <body>
 
 <header class="nav">
   <div class="wrap">
-    <a class="logo" href="index.html"><canvas data-icon="mushroom"></canvas>PIXEL HISTORY</a>
+    <a class="logo" href="index.html"><canvas data-icon="controller"></canvas>PIXEL HISTORY</a>
     <nav class="nav-links">
       <a href="#how">Как это работает</a>
       <a href="#demo">Демо</a>
@@ -26,6 +78,8 @@
     <a class="btn" href="create.html">Создать</a>
   </div>
 </header>
+
+<div class="holiday" id="holiday" hidden></div>
 
 <!-- HERO -->
 <section class="hero">
@@ -41,7 +95,7 @@
       </div>
       <textarea class="field" id="story" maxlength="2000" placeholder="Например: мы познакомились с Асем летом 2019 в горах под Алматы. Она потеряла рюкзак, а я весь день помогал его искать…">Мы познакомились с Асем летом 2019 в горах под Алматы. Она потеряла рюкзак, а я весь день помогал его искать. Хочу игру, где мы снова ищем этот рюкзак, а в конце она находит записку от меня…</textarea>
       <div class="selects">
-        <label class="select"><span>Жанр:</span><select name="genre"><option>Платформер</option><option>РПГ</option><option>Квест</option><option>Головоломка</option><option>Аркада</option></select></label>
+        <label class="select"><span>Жанр:</span><select name="genre"><option>История</option><option>Приключение</option><option>Квест</option><option>Аркада</option></select></label>
         <label class="select"><span>Камера:</span><select name="camera"><option>Сбоку</option><option>Сверху</option><option>Изометрия</option></select></label>
         <label class="select"><span>Стиль:</span><select name="style"><option>16-бит</option><option>8-бит</option></select></label>
         <label class="select"><span>Атмосфера:</span><select name="mood"><option>Уютная</option><option>Романтичная</option><option>Смешная</option><option>Ностальгия</option><option>Загадочная</option></select></label>
@@ -62,9 +116,9 @@
     <h2>Мы делаем <span class="yellow">ИГРУ</span> из ваших общих воспоминаний — в подарок вашему близкому.</h2>
     <p class="lead">Ваши люди, ваши места, ваши шутки — в пиксельной игре, которую он пройдёт по ссылке на телефоне или ноутбуке. Такой подарок не найти на полке: он собран из вашей жизни.</p>
     <div class="pillars">
-      <div class="pillar"><canvas data-icon="frog"></canvas><div><b>Ваши люди</b>Вы и близкий — главные герои</div></div>
-      <div class="pillar"><canvas data-icon="fern"></canvas><div><b>Ваши места</b>Уровни там, где вы были вместе</div></div>
-      <div class="pillar"><canvas data-icon="mushroom"></canvas><div><b>Ваши шутки</b>Диалоги и пасхалки только для вас</div></div>
+      <div class="pillar"><canvas data-icon="heart"></canvas><div><b>Ваши люди</b>Вы и близкий — главные герои</div></div>
+      <div class="pillar"><canvas data-icon="pin"></canvas><div><b>Ваши места</b>Уровни там, где вы были вместе</div></div>
+      <div class="pillar"><canvas data-icon="chat"></canvas><div><b>Ваши шутки</b>Диалоги и пасхалки только для вас</div></div>
     </div>
   </div>
 </section>
@@ -77,7 +131,8 @@
       <h2>Настоящая игра,<br>а не открытка</h2>
       <ul class="checklist">
         <li>Герои — вы и близкий человек, собранные в конструкторе</li>
-        <li>Уровни по вашим воспоминаниям</li>
+        <li>Главы по вашим воспоминаниям: подходишь, нажимаешь — и событие происходит</li>
+        <li>Мини-игры из вашей истории — проиграть нельзя</li>
         <li>Диалоги, секреты и записка в финале</li>
         <li>Ссылка-подарок: открывается на телефоне и ПК, прямо на сайте</li>
         <li>Оформление страницы-подарка на выбор: ретро, уютный вечер, день рождения, Новый год…</li>
@@ -95,6 +150,25 @@
 </section>
 
 <!-- ДЕМО -->
+<section id="parts">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="kicker">// Внутри картриджа</span><h2>Из чего состоит игра</h2></div><a class="btn" href="play.html">Посмотреть в демо</a></div>
+    <div class="parts">
+      <div class="part"><canvas data-icon="pin"></canvas><b>ГЛАВЫ-СЦЕНЫ</b><span>Каждое воспоминание — отдельная локация: ваш двор, кафе, клуб, кино. Можно по фото реального места.</span></div>
+      <div class="part"><canvas data-icon="controller"></canvas><b>МИНИ-ИГРЫ</b><span>Не абстрактные, а из вашей истории: переписка, примерка, собрать донер, поймать попкорн.</span></div>
+      <div class="part"><canvas data-icon="chat"></canvas><b>ДИАЛОГИ</b><span>Ваши фразы, шутки и прозвища — герои говорят так, как говорите вы.</span></div>
+      <div class="part"><canvas data-icon="heart"></canvas><b>ВОСПОМИНАНИЯ</b><span>Сердечки-моменты, которые игрок собирает по ходу истории.</span></div>
+      <div class="part"><canvas data-icon="cartridge"></canvas><b>ГЕРОИ</b><span>Вы и близкий, собранные в конструкторе: причёска, одежда, походка, жесты.</span></div>
+      <div class="part"><canvas data-icon="gift"></canvas><b>СТРАНИЦА-ПОДАРОК</b><span>Коробка с бантом, ваша открытка и тема: ретро, уютный вечер, день рождения…</span></div>
+      <div class="part"><canvas data-icon="key"></canvas><b>СЕКРЕТ И ДАТА</b><span>Подарок откроется в нужный день и только после ответа на ваш вопрос.</span></div>
+      <div class="part"><canvas data-icon="star"></canvas><b>ФИНАЛЬНОЕ ПИСЬМО</b><span>В конце — ваше письмо, которое печатается буква за буквой.</span></div>
+    </div>
+    <div class="minis">
+      <span><i>▶</i>Переписка с выбором ответа</span><span><i>▶</i>Квиз «Как хорошо ты меня знаешь»</span><span><i>▶</i>Поймай</span><span><i>▶</i>Примерка</span><span><i>▶</i>Собери по порядку</span><span><i>▶</i>Влог на камеру</span><span><i>▶</i>Почини / найди</span><span><i>▶</i>Выбор пути</span>
+    </div>
+  </div>
+</section>
+
 <section id="demo">
   <div class="wrap demo">
     <a class="pixel-frame" href="play.html" aria-label="Играть в демо">
@@ -149,9 +223,18 @@
   <div class="wrap">
     <div class="sec-head"><div><span class="kicker">// Примеры</span><h2>Истории, ставшие играми</h2></div><a class="btn" href="play.html">Играть в демо</a></div>
     <div class="grid-3">
-      <article class="card"><canvas class="icon" data-icon="mushroom"></canvas><span class="meta">ПЛАТФОРМЕР · 16-БИТ</span><h3>Грибная тропа</h3><p>Подарок подруге: лесные прогулки, корзина грибов и смешные истории из походов.</p><a href="play.html">Играть →</a></article>
-      <article class="card"><canvas class="icon" data-icon="frog"></canvas><span class="meta">КВЕСТ · СВЕРХУ</span><h3>Принц-лягушонок</h3><p>Игра к годовщине: чтобы найти принцессу, нужно вспомнить все наши свидания.</p><a href="play.html">Играть →</a></article>
-      <article class="card"><canvas class="icon" data-icon="lantern"></canvas><span class="meta">РПГ · ИЗОМЕТРИЯ</span><h3>Фонарь для деда</h3><p>Дедушкины рассказы о деревне превратились в приключение для всей семьи.</p><a href="play.html">Играть →</a></article>
+      <article class="card"><canvas class="icon" data-icon="cartridge"></canvas><span class="meta">ИСТОРИЯ · 16-БИТ · 6 ГЛАВ</span><h3>Общага, 4 курс</h3><p>Подарок одногруппникам: ночные пары, сессия и мини-игра «Сдай экзамен», которую невозможно провалить.</p><a href="play.html">Сыграть демо →</a></article>
+      <article class="card"><canvas class="icon" data-icon="pin"></canvas><span class="meta">ПОЕЗДКА · 8-БИТ · 5 ГЛАВ</span><h3>Дорога на Шымбулак</h3><p>Другу к годовщине дружбы: поездка в горы, канатка и снежки с мини-игрой «Попади в друга».</p><a href="play.html">Сыграть демо →</a></article>
+      <article class="card"><canvas class="icon" data-icon="house"></canvas><span class="meta">СЕМЬЯ · 16-БИТ · 7 ГЛАВ</span><h3>Бабушкин двор</h3><p>Маме на юбилей: детство во дворе, баурсаки на кухне и письмо от всех внуков в финале.</p><a href="play.html">Сыграть демо →</a></article>
+    </div>
+    <div class="sec-head" style="margin:72px 0 0"><div><span class="kicker">// Повод</span><h2>Под любой праздник</h2></div></div>
+    <div class="occ" style="margin-top:32px">
+      <a href="create.html"><b>ДЕНЬ РОЖДЕНИЯ</b><span>Все ваши годы дружбы — по главам, а в финале поздравление. Тема с конфетти.</span></a>
+      <a href="create.html"><b>ГОДОВЩИНА</b><span>Как познакомились, первая поездка, общие шутки. Подарок, который проходят вдвоём.</span></a>
+      <a href="create.html"><b>НОВЫЙ ГОД</b><span>Год в воспоминаниях и снег на странице-подарке. Можно открыть ровно в полночь.</span></a>
+      <a href="create.html"><b>ПРОВОДЫ И ПЕРЕЕЗД</b><span>Другу, который уезжает: город, двор и все ваши места — чтобы не забывал.</span></a>
+      <a href="create.html"><b>ВЫПУСКНОЙ</b><span>Общага, пары, сессия — игра для всей группы, можно скинуться компанией.</span></a>
+      <a href="create.html"><b>БЕЗ ПОВОДА</b><span>Просто сказать человеку «спасибо, что ты есть» — так, как не скажешь словами.</span></a>
     </div>
   </div>
 </section>
@@ -227,6 +310,32 @@
       <span><b>Авторская мини-игра</b> — <span data-kzt="7 990 ₸" data-rub="1 590 ₽" data-eur="16 €">7 990 ₸</span></span>
       <span><b>Срочно за 24 часа</b> — +30%</span>
     </div>
+
+    <div class="calc panel">
+      <div class="rows">
+        <span class="kicker">// Калькулятор подарка</span>
+        <div class="row"><span>Набор</span><div class="seg" id="cPlan"><button data-p="mini">Мини</button><button class="on" data-p="duo">Для двоих</button><button data-p="crew">Компания</button></div></div>
+        <div class="row"><span>Героев</span><div class="step" data-k="heroes"><button data-d="-1">−</button><output>2</output><button data-d="1">+</button></div></div>
+        <div class="row"><span>Глав (воспоминаний)</span><div class="step" data-k="levels"><button data-d="-1">−</button><output>6</output><button data-d="1">+</button></div></div>
+        <div class="row" id="cMiniRow" hidden><span>Авторские мини-игры</span><div class="step" data-k="minis"><button data-d="-1">−</button><output>0</output><button data-d="1">+</button></div></div>
+        <div class="row" id="cUrgentRow" hidden><span>Срочно за 24 часа (+30%)</span><div class="seg" id="cUrgent"><button class="on" data-u="0">Нет</button><button data-u="1">Да</button></div></div>
+        <div class="row"><span>Скинуться компанией</span><div class="step" data-k="people"><button data-d="-1">−</button><output>1</output><button data-d="1">+</button></div></div>
+      </div>
+      <div class="total">
+        <span class="muted small" id="cMode">Делает ИИ</span>
+        <div class="sum" id="cSum">14 990 ₸</div>
+        <div class="per" id="cPer" hidden></div>
+        <div class="note" id="cNote"></div>
+        <a class="btn primary block" id="cGo" href="create.html?plan=duo">Собрать игру</a>
+      </div>
+    </div>
+
+    <div class="guar">
+      <div><b>ПРЕВЬЮ БЕСПЛАТНО</b><span>Игру от ИИ сначала смотрите сами и платите, только если понравилась.</span></div>
+      <div><b>ПРАВКИ</b><span>30 дней правок у ИИ, 2–3 круга правок у художника.</span></div>
+      <div><b>ССЫЛКА НАВСЕГДА</b><span>Без ежегодных продлений — подарок не исчезнет.</span></div>
+      <div><b>ТОЛЬКО ДЛЯ ВАС</b><span>Игра не попадает в поиск — открыть её можно только по вашей ссылке.</span></div>
+    </div>
   </div>
 </section>
 
@@ -261,6 +370,10 @@
       <details><summary>Чем «Делает ИИ» отличается от «Делает человек»?</summary><p>ИИ собирает игру за несколько минут и стоит дешевле — отлично, если хочется быстро. Человек (художник и сценарист) рисует героев портретно по вашим фото, пишет сюжет и делает авторские мини-игры — дороже и занимает 3–5 дней. Начать с ИИ и потом передать игру человеку можно в любой момент.</p></details>
       <details><summary>На чём играть получателю?</summary><p>На телефоне, планшете или компьютере — в браузере, без установки и регистрации. На телефоне появляются экранные кнопки.</p></details>
       <details><summary>Как близкий откроет подарок?</summary><p>По ссылке откроется страница-подарок: коробка с бантом, ваше послание, а затем сама игра — прямо на сайте, без скачивания и регистрации. Можно назначить дату открытия и секретный вопрос.</p></details>
+      <details><summary>А если человек вообще не играет в игры?</summary><p>Это не страшно: управление — две стрелки и одна кнопка, на телефоне — экранные кнопки. Игра сама подсказывает, куда идти, а мини-игры простые. Это скорее интерактивная история, чем «игра для геймеров».</p></details>
+      <details><summary>Можно ли проиграть?</summary><p>Нет. Мини-игры нельзя провалить — если что-то не получилось, история всё равно идёт дальше. Подарок дойдёт до финального письма в любом случае.</p></details>
+      <details><summary>Сколько длится игра?</summary><p>Одна глава — 2–3 минуты. Игра на 6 глав проходится примерно за 15–20 минут, её приятно пройти ещё раз вдвоём.</p></details>
+      <details><summary>Можно ли сделать места как в жизни?</summary><p>Да. К каждому воспоминанию можно приложить фото места — оно станет пиксельным фоном главы. Без фото подберём похожую локацию: двор, кафе, клуб, кино, горы.</p></details>
       <details><summary>Сколько живёт ссылка?</summary><p>Навсегда. Никаких ежегодных продлений.</p></details>
       <details><summary>А если не понравится?</summary><p>Превью бесплатное — вы платите, только если игра понравилась. После оплаты можно сколько угодно править и пересоздавать уровни 30 дней.</p></details>
       <details><summary>Что вы делаете с моей историей?</summary><p>История и герои используются только для вашей игры. Игра не попадает в поиск — открыть её можно только по ссылке.</p></details>
@@ -281,6 +394,8 @@
   </div>
 </section>
 
+<div class="sticky-cta" id="stickyCta"><span>Игра в подарок<br><b>от 4 990 ₸</b> · превью бесплатно</span><a class="btn primary" href="create.html">Создать</a></div>
+
 <footer>
   <div class="wrap">
     <span class="px yellow" style="font-size:12px">PIXEL HISTORY</span>
@@ -291,7 +406,7 @@
 
 <div class="modal" id="demoModal">
   <div class="panel hot">
-    <canvas data-icon="frog" style="width:80px;background:var(--surface2);padding:8px"></canvas>
+    <canvas data-icon="controller" style="width:80px;background:var(--surface2);padding:8px"></canvas>
     <h3>Демо скоро здесь</h3>
     <p class="muted small">Мы собираем демо-игру по настоящей истории. Пока можно сделать свою — превью бесплатно.</p>
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
@@ -301,11 +416,12 @@
   </div>
 </div>
 
-<script src="assets/pixel.js?v=15"></script>
-<script src="assets/app.js?v=15"></script>
+<script src="assets/pixel.js?v=17"></script>
+<script src="assets/app.js?v=16"></script>
 <script src="assets/api.js?v=15"></script>
-<script src="game/engine.js?v=15"></script>
-<script src="games/demo.js?v=15"></script>
+<script src="game/scenes.js?v=1"></script>
+<script src="game/engine.js?v=18"></script>
+<script src="games/demo.js?v=17"></script>
 <script>
   // превью — сцены из демо-игры «Не с первого раза» (герои и локации из games/demo.js)
   const DH = {}; (window.PH_DEMO ? PH_DEMO.heroes : []).forEach(h => DH[h.id] = h);
@@ -313,17 +429,17 @@
   function loop(id, draw) { const ctx = document.getElementById(id).getContext('2d'); (function frame(t) { draw(ctx, t || 0); requestAnimationFrame(frame); })(); }
   // «Что вы получите»: осенний Актобе, долгожданная встреча
   loop('scene', (ctx, t) => {
-    PHGame.renderScene(ctx, 'autumn', t, { ground: 262, deco: [['tree_autumn', 40], ['bench', 150], ['lamp', 470], ['tree_autumn', 560]] });
+    PHGame.renderScene(ctx, 'autumn', t, { ground: 262, cam: 330 });
     PX.drawAnim(ctx, 'idle', ERBOL, null, t, 3, 290, 262);
     PX.drawAnim(ctx, 'wave', ASEM, null, t, 3, 372, 262, { flip: true });
   });
   // «Демо-игра»: ночной компьютерный клуб в Актобе + название
   loop('demoScene', (ctx, t) => {
-    PHGame.renderScene(ctx, 'club', t, { ground: 300, deco: [['gamechair', 90], ['vending', 500]] });
+    PHGame.renderScene(ctx, 'club', t, { ground: 300, cam: 40 });
     PX.drawAnim(ctx, 'idle', ERBOL, null, t, 3, 520, 300, { flip: true });
-    ctx.fillStyle = 'rgba(18,21,14,.78)'; ctx.fillRect(0, 62, 640, 62);
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#D4B95E'; ctx.font = '20px "Press Start 2P", monospace'; ctx.fillText('НЕ С ПЕРВОГО РАЗА', 320, 86);
-    ctx.fillStyle = '#EDE4CF'; ctx.font = '12px "JetBrains Mono", monospace'; ctx.fillText('история Ербола и Асем · 9 уровней', 320, 110);
+    ctx.fillStyle = 'rgba(16,16,26,.78)'; ctx.fillRect(0, 62, 640, 62);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#F4C430'; ctx.font = '20px "Press Start 2P", monospace'; ctx.fillText('НЕ С ПЕРВОГО РАЗА', 320, 86);
+    ctx.fillStyle = '#F1FAEE'; ctx.font = '12px "JetBrains Mono", monospace'; ctx.fillText('история Ербола и Асем · 9 глав', 320, 110);
   });
 
   // печатающийся диалог
@@ -358,6 +474,51 @@
     document.querySelectorAll('#cur button').forEach(x => x.classList.toggle('on', x === b));
     document.querySelectorAll('[data-' + b.dataset.c + ']').forEach(el => el.textContent = el.dataset[b.dataset.c]);
   });
+
+  // калькулятор подарка (цены — как в карточках выше)
+  const PLANS = {
+    ai: { mini: { price: 4990, heroes: 2, levels: 3 }, duo: { price: 14990, heroes: 4, levels: 6 }, crew: { price: 29990, heroes: 12, levels: 12 }, extra: 990 },
+    human: { mini: { price: 9990, heroes: 2, levels: 3 }, duo: { price: 24990, heroes: 4, levels: 6 }, crew: { price: 59990, heroes: 12, levels: 12 }, extra: 3990, mini: 7990 }
+  };
+  const RATE = { kzt: [1, ' ₸'], rub: [1 / 5.05, ' ₽'], eur: [1 / 500, ' €'] };
+  const calc = { mode: 'ai', plan: 'duo', heroes: 2, levels: 6, minis: 0, people: 1, urgent: false };
+  const money = (kzt, cur) => { const [k, sign] = RATE[cur]; const v = cur === 'kzt' ? Math.round(kzt / 10) * 10 : Math.round(kzt * k); return v.toLocaleString('ru-RU').replace(/,/g, ' ') + sign; };
+  const curNow = () => (document.querySelector('#cur button.on') || {}).dataset?.c || 'kzt';
+  function renderCalc() {
+    const P = PLANS[calc.mode], pl = P[calc.plan], cur = curNow();
+    const extraH = Math.max(0, calc.heroes - pl.heroes), extraL = Math.max(0, calc.levels - pl.levels);
+    let total = pl.price + (extraH + extraL) * P.extra + (calc.mode === 'human' ? calc.minis * P.mini : 0);
+    if (calc.mode === 'human' && calc.urgent) total *= 1.3;
+    document.querySelectorAll('.calc .step').forEach(st => st.querySelector('output').textContent = calc[st.dataset.k]);
+    document.getElementById('cMode').textContent = calc.mode === 'ai' ? 'Делает ИИ · превью бесплатно' : 'Делает человек · предоплата 50%';
+    document.getElementById('cSum').textContent = money(total, cur);
+    const per = document.getElementById('cPer'); per.hidden = calc.people < 2; per.textContent = 'по ' + money(total / calc.people, cur) + ' с каждого из ' + calc.people;
+    document.getElementById('cNote').textContent = (extraH + extraL ? 'В наборе ' + pl.heroes + ' героев и ' + pl.levels + ' глав, сверху: ' + (extraH + extraL) + ' × ' + money(P.extra, cur) + '. ' : 'Всё входит в набор. ') + (calc.people > 1 ? 'Ссылкой на оплату можно поделиться с друзьями.' : '');
+    document.getElementById('cMiniRow').hidden = calc.mode !== 'human'; document.getElementById('cUrgentRow').hidden = calc.mode !== 'human';
+    document.getElementById('cGo').href = 'create.html?' + (calc.mode === 'human' ? 'mode=human&' : '') + 'plan=' + calc.plan;
+  }
+  const LIM = { heroes: [1, 20], levels: [1, 20], minis: [0, 10], people: [1, 30] };
+  document.querySelectorAll('.calc .step').forEach(st => st.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const k = st.dataset.k; calc[k] = Math.max(LIM[k][0], Math.min(LIM[k][1], calc[k] + +b.dataset.d)); renderCalc(); }));
+  document.getElementById('cPlan').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; calc.plan = b.dataset.p; const pl = PLANS[calc.mode][calc.plan]; calc.heroes = Math.min(calc.heroes, pl.heroes); calc.levels = pl.levels; document.querySelectorAll('#cPlan button').forEach(x => x.classList.toggle('on', x === b)); renderCalc(); });
+  document.getElementById('cUrgent').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; calc.urgent = b.dataset.u === '1'; document.querySelectorAll('#cUrgent button').forEach(x => x.classList.toggle('on', x === b)); renderCalc(); });
+  document.getElementById('mode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { calc.mode = b.dataset.m; renderCalc(); } });
+  document.getElementById('cur').addEventListener('click', () => setTimeout(renderCalc));
+  renderCalc();
+
+  // плашка «до праздника N дней» (ближайший праздник)
+  (function () {
+    const now = new Date(), y = now.getFullYear(), day = 864e5;
+    const list = [[new Date(y, 1, 14), 'Дня влюблённых'], [new Date(y, 2, 8), '8 Марта'], [new Date(y, 11, 31), 'Нового года'], [new Date(y + 1, 1, 14), 'Дня влюблённых']];
+    const next = list.find(([d]) => d - now > -day && d - now < 45 * day);
+    if (!next) return;
+    const n = Math.max(0, Math.ceil((next[0] - now) / day)), el = document.getElementById('holiday');
+    el.innerHTML = n ? `<b>ДО ${next[1].toUpperCase()} — ${n} ДН.</b> Игра от ИИ готова за минуты, подарок успеет точно.<a href="create.html">Создать</a>` : `<b>СЕГОДНЯ ПРАЗДНИК!</b> Ещё не поздно — игра готова за минуты.<a href="create.html">Создать</a>`;
+    el.hidden = false;
+  })();
+
+  // кнопка с ценой внизу экрана на телефоне — после первого экрана
+  const sticky = document.getElementById('stickyCta'), pricing = document.getElementById('pricing');
+  addEventListener('scroll', () => { const r = pricing.getBoundingClientRect(); sticky.classList.toggle('show', scrollY > innerHeight * 0.8 && !(r.top < innerHeight && r.bottom > 0)); }, { passive: true });
 </script>
 </body>
 </html>

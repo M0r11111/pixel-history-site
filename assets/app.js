@@ -19,20 +19,20 @@
     retro: { name: 'Ретро-приставка', logo: 'controller', swatch: ['#101018', '#E63946', '#F4C430'] },
     cozy: { name: 'Уютный вечер', logo: 'heart', swatch: ['#141A33', '#FFC857', '#FF6F91'] },
     light: { name: 'Светлый подарок', logo: 'gift', swatch: ['#FFF8EE', '#FF8A5B', '#6C5CE7'] },
-    goblin: { name: 'Goblincore', logo: 'mushroom', swatch: ['#1C2117', '#D4B95E', '#8FB25A'] },
+    arcade: { name: 'Неон-аркада', logo: 'star', swatch: ['#12061F', '#FF3EA5', '#29E7FF'] },
     birthday: { name: 'День рождения', logo: 'gift', swatch: ['#FFF0F6', '#FF4D8D', '#3DB2FF'] },
     newyear: { name: 'Новый год', logo: 'gift', swatch: ['#0E2433', '#E8C547', '#D7263D'] }
   };
   const appSrc = (document.currentScript && document.currentScript.src) || location.href;
   let siteTheme = 'retro';
   // Только для страницы-подарка (gift.html): тема, которую выбрал клиент.
-  // retro — стиль сайта как есть; goblin — базовые цвета style.css; остальные — assets/gift-themes/*.css
+  // retro — стиль сайта как есть; остальные — assets/gift-themes/*.css
   function applyGiftTheme(name) {
     if (!THEMES[name]) name = 'retro';
     const site = document.getElementById('site-theme');
     let gl = document.getElementById('gift-theme');
     if (site) site.disabled = name !== 'retro';
-    if (name === 'retro' || name === 'goblin') { if (gl) gl.remove(); }
+    if (name === 'retro') { if (gl) gl.remove(); }
     else {
       if (!gl) { gl = document.createElement('link'); gl.id = 'gift-theme'; gl.rel = 'stylesheet'; document.head.appendChild(gl); }
       gl.href = new URL('gift-themes/' + name + '.css?v=3', appSrc).href;

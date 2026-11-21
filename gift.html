@@ -87,17 +87,18 @@
 <!-- нет игры -->
 <section class="scr" id="missing" hidden>
   <div class="box">
-    <canvas data-icon="snail" data-outline style="width:96px"></canvas>
+    <canvas data-icon="gift" data-outline style="width:96px"></canvas>
     <div class="big" style="font-size:16px">Подарок не найден</div>
     <p class="muted">Проверь ссылку — возможно, она скопировалась не целиком.</p>
     <a class="btn" href="index.html">На сайт Pixel History</a>
   </div>
 </section>
 
-<script src="assets/pixel.js?v=15"></script>
-<script src="assets/app.js?v=15"></script>
-<script src="game/engine.js?v=15"></script>
-<script src="games/demo.js?v=15"></script>
+<script src="assets/pixel.js?v=17"></script>
+<script src="assets/app.js?v=16"></script>
+<script src="game/scenes.js?v=1"></script>
+<script src="game/engine.js?v=18"></script>
+<script src="games/demo.js?v=17"></script>
 <script src="assets/api.js?v=15"></script>
 <script>
 const $ = s => document.querySelector(s);
@@ -109,11 +110,11 @@ function setGiftTheme(name) {
   if (!PH.THEMES[name]) name = 'retro';
   PH.applyGiftTheme(name);
   const c = document.getElementById('fx'), x = c.getContext('2d'), run = ++fxRun;
-  const kind = name === 'birthday' ? 'confetti' : name === 'newyear' ? 'snow' : name === 'cozy' ? 'stars' : null;
+  const kind = name === 'birthday' ? 'confetti' : name === 'newyear' ? 'snow' : name === 'cozy' || name === 'arcade' ? 'stars' : null;
   const fit = () => { c.width = innerWidth; c.height = innerHeight; }; fit(); addEventListener('resize', fit);
   x.clearRect(0, 0, c.width, c.height);
   if (!kind || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const cols = { confetti: ['#FF4D8D', '#3DB2FF', '#FFC400', '#22B07D', '#9B5DE5'], snow: ['#FFFFFF', '#DCEBF5'], stars: ['#FFF4E0', '#FFC857'] }[kind];
+  const cols = { confetti: ['#FF4D8D', '#3DB2FF', '#FFC400', '#22B07D', '#9B5DE5'], snow: ['#FFFFFF', '#DCEBF5'], stars: name === 'arcade' ? ['#FF3EA5', '#29E7FF', '#F4F1FF'] : ['#FFF4E0', '#FFC857'] }[kind];
   const ps = Array.from({ length: kind === 'stars' ? 40 : 70 }, (_, i) => ({ x: Math.random() * c.width, y: Math.random() * c.height, v: 0.6 + Math.random() * 1.6, s: kind === 'snow' ? 2 + Math.random() * 3 : 4 + Math.random() * 4, ph: Math.random() * 6, c: cols[i % cols.length] }));
   (function frame(t) {
     if (run !== fxRun) return;

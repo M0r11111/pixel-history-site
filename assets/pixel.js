@@ -316,15 +316,17 @@ function PXFactory(global) {
     }
     function acc() {
       if (o.acc === 'glasses') {
-        const gl = '#2A2420';
+        const gl = o.glassesColor || '#2A2420';
         const box = (a, z) => { R(a, z, 9, 9, gl); R(a, z, 13, 13, gl); R(a, a, 10, 12, gl); R(z, z, 10, 12, gl); };
         if (view === 'front') { box(9, 12); box(13, 16); R(6, 8, 10, 10, gl); }
         if (view === 'side') { box(14, 17); R(11, 13, 10, 10, gl); }
         if (view === 'back') { set(5, 9, gl); set(19, 9, gl); }
       }
-      if (o.acc === 'mushroom') {
-        R(9, 15, 0, 0, '#C0593A'); R(7, 17, 1, 1, '#C0593A'); R(5, 19, 2, 3, '#C0593A'); R(4, 20, 4, 4, '#9E4630');
-        [[8, 2], [12, 1], [16, 3], [14, 2], [6, 3]].forEach(([x, y]) => set(x, y, BONE));
+      if (o.acc === 'cap' || o.acc === 'mushroom') {          // кепка (старое значение mushroom тоже рисуем кепкой)
+        const cc = o.capColor || '#E63946', cd = shade(cc, -0.3);
+        R(8, 16, 0, 0, cc); R(6, 18, 1, 3, cc); R(6, 18, 4, 4, cd); set(12, 1, shade(cc, 0.3));
+        if (view === 'front') R(15, 21, 5, 5, cd);
+        if (view === 'side') R(16, 22, 5, 5, cd);
       }
       if (o.acc === 'flower') { const fx = view === 'back' ? 16 : 7; set(fx, 3, '#E39B86'); set(fx - 1, 4, '#E39B86'); set(fx + 1, 4, '#E39B86'); set(fx, 5, '#E39B86'); set(fx, 4, '#F2E3A0'); }
       if (o.acc === 'scarf') {
@@ -445,61 +447,27 @@ function PXFactory(global) {
     drawFx(ctx, f.fx, cx, footY, s, flip ? -1 : 1);
   }
 
-  /* ---------- Лесная сцена (сетка 64×40) ---------- */
-  function sceneGrid() {
-    const W = 64, H = 40, g = Array.from({ length: H }, () => Array(W).fill(null));
-    const st = (x, y, c) => { if (x >= 0 && x < W && y >= 0 && y < H) g[y][x] = c; };
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-      let c = y < 6 ? '#161B12' : y < 12 ? '#1E2618' : y < 18 ? '#283321' : y < 22 ? '#33422A' : '#3E5231';
-      if (y >= 27) c = y < 29 ? ((x % 3) ? '#5B7A3A' : '#6E9145') : ((x + y) % 2 ? '#4A3626' : '#3B2B1E');
-      st(x, y, c);
-    }
-    for (let x = 0; x < W; x++) { const h = 20 + Math.round(2 * Math.sin(x / 4) + Math.sin(x / 1.7)); for (let y = h; y < 27; y++) st(x, y, '#47603A'); }
-    for (let x = 0; x < W; x++) { const h = 4 + Math.round(2 * Math.sin(x / 3) + 1.5 * Math.cos(x / 5)); for (let y = 0; y < h; y++) st(x, y, (x + y) % 4 ? '#2F4A26' : '#3E5E30'); }
-    [[2, 4], [57, 5]].forEach(([tx, w]) => { for (let y = 0; y < 29; y++) for (let x = tx; x < tx + w; x++) st(x, y, x === tx ? '#5E4530' : (x === tx + w - 1 ? '#33251A' : '#4A3626')); });
-    for (let y = 0; y < 6; y++) for (let x = 0; x < 10; x++) if ((x * 7 + y * 3) % 5) st(x, y, '#3E5E30');
-    for (let y = 0; y < 7; y++) for (let x = 53; x < 64; x++) if ((x * 5 + y) % 4) st(x, y, '#3E5E30');
-    // мухомор
-    for (let y = 15; y < 22; y++) { const r = Math.min(6, (y - 14) * 2); for (let x = 19 - r; x <= 19 + r; x++) st(x, y, '#C0593A'); }
-    [[16, 18], [21, 17], [18, 20], [23, 20], [14, 21], [19, 16]].forEach(([x, y]) => st(x, y, '#EDE4CF'));
-    for (let x = 14; x <= 24; x++) st(x, 21, '#9E4630');
-    for (let y = 22; y < 29; y++) for (let x = 18; x <= 20; x++) st(x, y, x === 20 ? '#C9B994' : '#E3D6B5');
-    [[28, '#9C6B3A'], [33, '#C0593A'], [9, '#B5893F']].forEach(([cx, cap]) => {
-      for (let x = cx - 2; x <= cx + 2; x++) st(x, 25, cap); for (let x = cx - 1; x <= cx + 1; x++) st(x, 24, cap); st(cx, 26, '#E3D6B5'); st(cx, 27, '#E3D6B5');
-    });
-    // лягушка
-    for (let y = 25; y < 29; y++) for (let x = 40; x <= 46; x++) st(x, y, '#8FB25A');
-    for (let x = 41; x <= 45; x++) st(x, 28, '#C3D88A');
-    st(41, 23, '#EDE4CF'); st(45, 23, '#EDE4CF'); st(41, 24, '#12150E'); st(45, 24, '#12150E'); st(39, 28, '#6E9145'); st(47, 28, '#6E9145');
-    // улитка
-    for (let y = 24; y < 28; y++) for (let x = 49; x <= 52; x++) st(x, y, '#8A6A3A');
-    st(50, 25, '#D4B95E'); st(51, 26, '#D4B95E'); st(50, 26, '#D4B95E');
-    for (let x = 47; x <= 53; x++) st(x, 28, '#A9A68C'); st(47, 27, '#A9A68C'); st(46, 26, '#A9A68C');
-    // папоротники
-    [6, 25, 36, 54].forEach(fx => { for (let i = 0; i < 4; i++) { st(fx, 28 - i, '#6E9145'); st(fx - 1 - (i % 2), 27 - i, '#5B7A3A'); st(fx + 1 + (i % 2), 27 - i, '#5B7A3A'); } });
-    return g;
-  }
-  const FIREFLIES = [[12, 9], [24, 6], [31, 12], [38, 8], [46, 14], [50, 5], [27, 17], [8, 14], [42, 19]];
-
+  /* ---------- Превью-сцена (конструктор, генерация) ----------
+     Берёт детальную локацию из game/scenes.js; если её нет на странице — простой ретро-фон. */
   function drawScene(ctx, s = 10, t = 0) {
-    const g = sceneGrid();
-    g.forEach((row, y) => row.forEach((c, x) => { ctx.fillStyle = c; ctx.fillRect(x * s, y * s, s, s); }));
-    FIREFLIES.forEach(([x, y], i) => {
-      const on = Math.sin(t / 400 + i * 1.7) > -0.3;
-      if (on) { ctx.fillStyle = '#F2E3A0'; ctx.fillRect(x * s, y * s + Math.round(Math.sin(t / 700 + i) * 2), s, s); }
-    });
+    const cw = ctx.canvas.width, ch = ctx.canvas.height;
+    if (global.PHScenes && global.PHScenes.draw(ctx, 'autumn', 260, t, 280)) { ctx.fillStyle = '#5D5E64'; if (ch > 360) ctx.fillRect(0, 360, cw, ch - 360); return; }
+    ['#101018', '#16162A', '#1E1E3A', '#2A2A4A'].forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(0, Math.floor(i * ch / 5), cw, Math.ceil(ch / 5) + 1); });
+    ctx.fillStyle = '#34344C'; ctx.fillRect(0, 280, cw, ch - 280); ctx.fillStyle = '#E63946'; ctx.fillRect(0, 280, cw, 4);
   }
 
   /* ---------- Иконки 8×8 ---------- */
-  const IC = { r: '#C0593A', w: '#EDE4CF', b: '#D9C9A3', g: '#5B7A3A', G: '#A8C46A', d: '#12150E', s: '#A9A68C', o: '#8A6A3A', y: '#D4B95E', Y: '#F2E3A0', c: '#9B8AC4', C: '#C9BCEB', B: '#4A3626' };
+  const IC = { R: '#E63946', L: '#3D7DD8', Q: '#F4C430', W: '#F1FAEE', K: '#5A5A72', k: '#C9C9D6', D: '#1B1B28', r: '#C0593A', w: '#EDE4CF', b: '#D9C9A3', g: '#5B7A3A', G: '#A8C46A', d: '#12150E', s: '#A9A68C', o: '#8A6A3A', y: '#D4B95E', Y: '#F2E3A0', c: '#9B8AC4', C: '#C9BCEB', B: '#4A3626' };
   const ICONS = {
-    mushroom: ['..rrrr..', '.rrwrrr.', 'rrrrrwrr', 'rwrrrrrr', '..bbbb..', '...bb...', '...bb...', 'GGGGGGGG'],
-    frog: ['.ww..ww.', '.wd..dw.', 'GGGGGGGG', 'GGGGGGGG', 'GgggggGG', '.GggggG.', 'GG....GG', '........'],
-    snail: ['........', '...ooo..', '..oyyyo.', '..oyoyo.', 's.oooyo.', 'ss.ooo..', 'ssssssss', '........'],
-    fern: ['...G....', '..GgG...', '.G.G.G..', '..GgG.G.', 'G.G.GgG.', '.GgG.G..', '...G....', '..BBB...'],
-    crystal: ['...c....', '..cCc...', '..cCc.c.', '.ccCcCc.', '.cCccCc.', '.cCc.cc.', '..ccccc.', '.BBBBBB.'],
-    lantern: ['...BB...', '..BBBB..', '.B.yy.B.', '.ByYYyB.', '.ByYYyB.', '.B.yy.B.', '..BBBB..', '........'],
-    heart: ['.rr.rr.', 'rrwrrrr', 'rrrrrrr', '.rrrrr.', '..rrr..', '...r...'],
+    cartridge: ['.KKKKKK.', '.KkkkkK.', '.KLLLLK.', '.KLWWLK.', '.KLLLLK.', '.KKKKKK.', '.KQQQQK.', '..KKKK..'],
+    star: ['...QQ...', '...QQ...', 'QQQQQQQQ', '.QQQQQQ.', '..QQQQ..', '.QQQQQQ.', '.QQ..QQ.', '.Q....Q.'],
+    pin: ['..RRRR..', '.RRRRRR.', '.RRWWRR.', '.RRWWRR.', '.RRRRRR.', '..RRRR..', '...RR...', '...R....'],
+    chat: ['.LLLLLLL.', 'LLLLLLLLL', 'LLWLWLWLL', 'LLLLLLLLL', '.LLLLLLL.', '..LL.....', '.LL......'],
+    key: ['.QQQ....', 'Q...Q...', 'Q...QQQQ', 'Q...Q.Q.', '.QQQ..QQ'],
+    house: ['...RR...', '..RRRR..', '.RRRRRR.', 'RRRRRRRR', '.kkkkkk.', '.kQkkLk.', '.kQkkLk.', '.kkkkLk.'],
+    camera: ['..KK....', 'KKKKKKKK', 'KkKLLKkK', 'KKLWLLKK', 'KKLLLLKK', 'KkKLLKkK', 'KKKKKKKK'],
+    cup: ['QQQQQQQQ', 'Q.QQQQ.Q', 'Q.QQQQ.Q', '.QQQQQQ.', '..QQQQ..', '...QQ...', '..KKKK..', '.KKKKKK.'],
+    heart: ['.RR.RR.', 'RRWRRRR', 'RRRRRRR', '.RRRRR.', '..RRR..', '...R...'],
     controller: ['........', '.dddddd.', 'dccccccd', 'cwcccrcc', 'wwwccccy', 'cwcccrcc', 'dccddccd', '.dd..dd.'],
     gift: ['....yy..yy....', '...yYy..yYy...', '....yyyyyy....', 'rrrrrryyrrrrrr', 'rrrrrryYrrrrrr', 'rrrrrryyrrrrrr', '.rrrrryyrrrrr.', '.rrrrryyrrrrr.', '.rrrrryyrrrrr.', '.rrrrryyrrrrr.', '.rrrrryyrrrrr.', '.rrrrryyrrrrr.']
   };
@@ -521,7 +489,7 @@ function PXFactory(global) {
   /* ---------- Готовые герои ---------- */
   const HEROES = {
     asem: { name: 'Асем', role: 'Кого ищем', skin: '#F0CBA8', hair: '#5A3A26', style: 'long', eyes: '#5B7A3A', top: '#C0593A', topType: 'hoodie', bottom: '#3E4A33', bottomType: 'pants', shoes: '#EDE4CF', acc: 'none', walk: 'walk_bouncy', emotes: ['wave', 'air_kiss', 'hug'] },
-    you: { name: 'Вы', role: 'Главный герой', skin: '#C99A6E', hair: '#221A14', style: 'curtains', eyes: '#4A3626', top: '#6E9145', topType: 'tshirt', bottom: '#5E4530', bottomType: 'pants', shoes: '#2A2420', acc: 'none', walk: 'walk_normal', emotes: ['wave', 'hug'] },
+    you: { name: 'Вы', role: 'Главный герой', skin: '#C99A6E', hair: '#221A14', style: 'curtains', eyes: '#4A3626', top: '#3D7DD8', topType: 'tshirt', bottom: '#5E4530', bottomType: 'pants', shoes: '#2A2420', acc: 'none', walk: 'walk_normal', emotes: ['wave', 'hug'] },
     base: { name: 'Новый герой', role: 'Друг', skin: '#C9B994', mannequin: true }
   };
 

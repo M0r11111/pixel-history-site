@@ -13,7 +13,7 @@
 <body>
 <header class="nav">
   <div class="wrap">
-    <a class="logo" href="index.html"><canvas data-icon="mushroom"></canvas>PIXEL HISTORY</a>
+    <a class="logo" href="index.html"><canvas data-icon="controller"></canvas>PIXEL HISTORY</a>
     <nav class="nav-links"><a href="index.html#how">Как это работает</a><a href="index.html#demo">Демо</a><a href="index.html#pricing">Цены</a></nav>
     <a class="btn" href="character.html">Герои</a>
   </div>
@@ -119,7 +119,7 @@
     <div style="display:grid;gap:20px;align-content:start">
       <div class="pixel-frame" id="testGame"></div>
       <div style="display:flex;gap:14px;flex-wrap:wrap"><button class="btn" id="edit">Изменить</button><button class="btn" id="regen">Пересоздать игру</button></div>
-      <p class="muted small">Это тестовый запуск — так игра будет выглядеть у получателя. Стрелки — идти, пробел — прыгать, Enter — дальше.</p>
+      <p class="muted small">Это тестовый запуск — так игра будет выглядеть у получателя. Стрелки — идти, E или пробел — действие, Enter — дальше.</p>
     </div>
     <aside class="panel hot" style="display:grid;gap:20px">
       <h3>Подарить</h3>
@@ -153,7 +153,7 @@
 
 <!-- заявка человеку -->
 <main class="wrap gen" id="human" hidden>
-  <canvas data-icon="lantern" data-outline style="width:96px;background:var(--surface2);padding:10px"></canvas>
+  <canvas data-icon="cartridge" data-outline style="width:96px;background:var(--surface2);padding:10px"></canvas>
   <span class="kicker">// Заявка принята</span>
   <h1 style="font-size:clamp(18px,3vw,28px)">Художник уже читает вашу историю</h1>
   <p class="muted" style="max-width:640px">Мы ответим в чате на сайте в течение часа: уточним детали и покажем первые эскизы героев. Готовая игра — через 3–5 дней.</p>
@@ -169,10 +169,11 @@
 
 <div class="modal" id="soon"><div class="panel hot"><h3>Скоро</h3><p class="muted small">Это прототип сайта — эта кнопка заработает, когда подключим генерацию игр.</p><button class="btn" data-close>Понятно</button></div></div>
 
-<script src="assets/pixel.js?v=15"></script>
-<script src="assets/app.js?v=15"></script>
+<script src="assets/pixel.js?v=17"></script>
+<script src="assets/app.js?v=16"></script>
 <script src="assets/api.js?v=15"></script>
-<script src="game/engine.js?v=15"></script>
+<script src="game/scenes.js?v=1"></script>
+<script src="game/engine.js?v=18"></script>
 <script>
 const $ = s => document.querySelector(s);
 const PLANS = {
@@ -187,9 +188,9 @@ const state = {
   story: draft.story || 'Мы познакомились с Асем летом 2019 в горах под Алматы. Она потеряла рюкзак, а я весь день помогал его искать. Хочу игру, где мы снова ищем этот рюкзак, а в конце она находит записку от меня…',
   heroes: PH.heroes(),
   moments: [['Горы под Алматы', 'Где потерялся рюкзак'], ['Кафе у озера', 'Первое свидание и пролитый чай'], ['Записка в рюкзаке', 'Сюрприз в конце игры']],
-  opts: { 'Жанр': draft.genre || 'Платформер', 'Камера': draft.camera || 'Сбоку', 'Стиль': /8/.test(draft.style || '') ? '8-бит' : '16-бит', 'Атмосфера': draft.mood || 'Романтичная', 'Длина': '~10 минут' }
+  opts: { 'Жанр': draft.genre || 'История', 'Камера': draft.camera || 'Сбоку', 'Стиль': /8/.test(draft.style || '') ? '8-бит' : '16-бит', 'Атмосфера': draft.mood || 'Романтичная', 'Длина': '~10 минут' }
 };
-const OPTS = { 'Жанр': ['Платформер', 'РПГ', 'Квест', 'Головоломка', 'Аркада'], 'Камера': ['Сбоку', 'Сверху', 'Изометрия'], 'Стиль': ['8-бит', '16-бит'], 'Атмосфера': ['Уютная', 'Романтичная', 'Смешная', 'Ностальгия', 'Загадочная'], 'Длина': ['~5 минут', '~10 минут', '~20 минут'] };
+const OPTS = { 'Жанр': ['История', 'Приключение', 'Квест', 'Аркада'], 'Камера': ['Сбоку', 'Сверху', 'Изометрия'], 'Стиль': ['8-бит', '16-бит'], 'Атмосфера': ['Уютная', 'Романтичная', 'Смешная', 'Ностальгия', 'Загадочная'], 'Длина': ['~5 минут', '~10 минут', '~20 минут'] };
 const fmt = n => n.toLocaleString('ru-RU').replace(/,/g, ' ') + ' ₸';
 
 // режим и тариф
@@ -299,10 +300,10 @@ function titleScreen(ctx, t, withTitle) {
   const hs = state.heroes.slice(0, 4);
   hs.forEach((h, i) => PX.drawAnim(ctx, 'idle', h, null, t + i * 500, 3, 360 - hs.length * 34 + i * 68, 278, { flip: i % 2 === 1 }));
   if (withTitle) {
-    ctx.fillStyle = 'rgba(18,21,14,.72)'; ctx.fillRect(0, 36, 640, 150);
-    ctx.textAlign = 'center'; ctx.fillStyle = '#D4B95E'; ctx.font = '26px "Press Start 2P"';
+    ctx.fillStyle = 'rgba(16,16,26,.72)'; ctx.fillRect(0, 36, 640, 150);
+    ctx.textAlign = 'center'; ctx.fillStyle = '#F4C430'; ctx.font = '26px "Press Start 2P"';
     ctx.fillText(gameTitle(), 320, 110);
-    ctx.fillStyle = '#EDE4CF'; ctx.font = '13px "JetBrains Mono"'; ctx.fillText(state.moments.length + ' уровня · ' + state.opts['Длина'], 320, 150);
+    ctx.fillStyle = '#F1FAEE'; ctx.font = '13px "JetBrains Mono"'; ctx.fillText(state.moments.length + ' гл. · ' + state.opts['Длина'], 320, 150);
     if (Math.floor(t / 600) % 2) { ctx.font = '12px "Press Start 2P"'; ctx.fillText('НАЖМИ СТАРТ', 320, 350); }
   }
 }
@@ -327,9 +328,9 @@ function runGen() {
     p = Math.min(100, (t - start) / 60);
     PX.drawScene(gctx, 10, t);
     const edge = Math.round(640 * p / 100);
-    gctx.fillStyle = 'rgba(18,21,14,.88)'; gctx.fillRect(edge, 0, 640 - edge, 400);
-    gctx.fillStyle = '#3B4630'; for (let x = edge - edge % 20; x < 640; x += 20) gctx.fillRect(x, 0, 2, 400); for (let y = 0; y < 400; y += 20) gctx.fillRect(edge, y, 640 - edge, 2);
-    gctx.fillStyle = '#D4B95E'; gctx.fillRect(edge - 2, 0, 4, 400);
+    gctx.fillStyle = 'rgba(16,16,26,.88)'; gctx.fillRect(edge, 0, 640 - edge, 400);
+    gctx.fillStyle = '#2E2E46'; for (let x = edge - edge % 20; x < 640; x += 20) gctx.fillRect(x, 0, 2, 400); for (let y = 0; y < 400; y += 20) gctx.fillRect(edge, y, 640 - edge, 2);
+    gctx.fillStyle = '#F4C430'; gctx.fillRect(edge - 2, 0, 4, 400);
     $('#pct').textContent = Math.floor(p) + '%';
     bar.querySelectorAll('i').forEach((el, i) => { el.className = i < Math.floor(p / 5) ? 'on' : (i === Math.floor(p / 5) && p < 100 ? 'cur' : ''); });
     const done = Math.floor(p / 100 * steps.length);
@@ -339,7 +340,7 @@ function runGen() {
 }
 // ---------- сборка игры ----------
 // ВРЕМЕННО: простой шаблон вместо ИИ. На следующем шаге его заменит генерация нейросетью на сервере.
-const THEME_WORDS = [[/гор|медеу|шымбулак|скал|поход/i, 'mountains'], [/озер|река|пруд|лодк/i, 'lake'], [/мор|пляж|океан|берег/i, 'beach'], [/лес|парк|гриб|тропа/i, 'forest'], [/город|улиц|кафе|ресторан|кино|метро/i, 'city'], [/дом|квартир|кухн|комнат/i, 'home'], [/снег|зим|каток|новый год/i, 'snow'], [/ноч|звёзд|звезд|луна/i, 'night']];
+const THEME_WORDS = [[/гор|медеу|шымбулак|скал|поход/i, 'mountains'], [/озер|река|пруд|лодк/i, 'lake'], [/мор|пляж|океан|берег/i, 'beach'], [/лес|парк|тропа/i, 'forest'], [/город|улиц|кафе|ресторан|кино|метро/i, 'city'], [/дом|квартир|кухн|комнат/i, 'home'], [/снег|зим|каток|новый год/i, 'snow'], [/ноч|звёзд|звезд|луна/i, 'night']];
 function guessTheme(text, i) { for (const [re, th] of THEME_WORDS) if (re.test(text)) return th; return ['forest', 'city', 'lake', 'mountains'][i % 4]; }
 function buildGame() {
   const hs = state.heroes.map(h => Object.assign({}, h));
@@ -486,9 +487,9 @@ renderHeroes(); renderMoments(); setMode(state.mode);
       shown += (target - shown) * 0.05; const p = Math.min(100, shown);
       PX.drawScene(gctx, 10, t);
       const edge = Math.round(640 * p / 100);
-      gctx.fillStyle = 'rgba(18,21,14,.88)'; gctx.fillRect(edge, 0, 640 - edge, 400);
-      gctx.fillStyle = '#3B4630'; for (let x = edge - edge % 20; x < 640; x += 20) gctx.fillRect(x, 0, 2, 400); for (let y = 0; y < 400; y += 20) gctx.fillRect(edge, y, 640 - edge, 2);
-      gctx.fillStyle = '#D4B95E'; gctx.fillRect(edge - 2, 0, 4, 400);
+      gctx.fillStyle = 'rgba(16,16,26,.88)'; gctx.fillRect(edge, 0, 640 - edge, 400);
+      gctx.fillStyle = '#2E2E46'; for (let x = edge - edge % 20; x < 640; x += 20) gctx.fillRect(x, 0, 2, 400); for (let y = 0; y < 400; y += 20) gctx.fillRect(edge, y, 640 - edge, 2);
+      gctx.fillStyle = '#F4C430'; gctx.fillRect(edge - 2, 0, 4, 400);
       $('#pct').textContent = Math.floor(p) + '%';
       bar.querySelectorAll('i').forEach((el, i) => { el.className = i < Math.floor(p / 5) ? 'on' : (i === Math.floor(p / 5) && p < 100 ? 'cur' : ''); });
       requestAnimationFrame(frame);

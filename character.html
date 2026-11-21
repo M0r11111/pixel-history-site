@@ -25,7 +25,7 @@
 <body>
 <header class="nav">
   <div class="wrap">
-    <a class="logo" href="index.html"><canvas data-icon="mushroom"></canvas>PIXEL HISTORY</a>
+    <a class="logo" href="index.html"><canvas data-icon="controller"></canvas>PIXEL HISTORY</a>
     <nav class="nav-links"><a href="index.html#how">Как это работает</a><a href="play.html">Демо</a><a href="index.html#pricing">Цены</a></nav>
     <a class="btn" href="create.html">К игре</a>
   </div>
@@ -91,7 +91,7 @@
       <div class="tab-pane" data-pane="face">
         <div class="opt-group"><b>Цвет глаз</b><div class="swatches" data-key="eyes"></div></div>
         <div class="opt-group"><b>Аксессуар</b><div class="tags" data-single data-key="acc">
-          <span class="tag" data-v="none">Нет</span><span class="tag" data-v="glasses">Очки</span><span class="tag" data-v="mushroom">Грибная шляпа</span><span class="tag" data-v="flower">Цветок</span><span class="tag" data-v="scarf">Шарф</span>
+          <span class="tag" data-v="none">Нет</span><span class="tag" data-v="glasses">Очки</span><span class="tag" data-v="cap">Кепка</span><span class="tag" data-v="flower">Цветок</span><span class="tag" data-v="scarf">Шарф</span>
         </div></div>
       </div>
 
@@ -121,8 +121,8 @@
   </div>
 </main>
 
-<script src="assets/pixel.js?v=15"></script>
-<script src="assets/app.js?v=15"></script>
+<script src="assets/pixel.js?v=17"></script>
+<script src="assets/app.js?v=16"></script>
 <script src="assets/api.js?v=15"></script>
 <script>
 const PAL = {
@@ -265,7 +265,7 @@ $('#random').onclick = () => {
   Object.assign(cur, {
     skin: pick(PAL.skin), hair: pick(PAL.hair), style: pick(PX.HAIR.slice(1))[0], eyes: pick(PAL.eyes),
     topType: pick(['tshirt', 'hoodie', 'shirt', 'dress']), top: pick(PAL.top), bottomType: pick(['pants', 'shorts', 'skirt']), bottom: pick(PAL.bottom),
-    shoes: pick(PAL.shoes.slice(1)), acc: pick(['none', 'none', 'glasses', 'mushroom', 'flower', 'scarf']), walk: pick(PX.WALKS), mannequin: false
+    shoes: pick(PAL.shoes.slice(1)), acc: pick(['none', 'none', 'glasses', 'cap', 'flower', 'scarf']), walk: pick(PX.WALKS), mannequin: false
   });
   play(null); syncAll();
 };

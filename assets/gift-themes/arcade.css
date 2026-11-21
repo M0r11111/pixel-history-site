@@ -1,0 +1,28 @@
+/* Тема страницы-подарка «Неон-аркада»: ночной игровой зал — тёмно-фиолетовый фон, розовый и голубой неон. */
+:root {
+  --bg: #12061F;
+  --surface: #1E0E33;
+  --surface2: #3A1F5C;
+  --yellow: #FF3EA5;
+  --rust: #29E7FF;
+  --moss: #29E7FF;
+  --text: #F4F1FF;
+  --muted: #B9A8D6;
+  --ink: #08020F;
+}
+body {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(rgba(41, 231, 255, .06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 62, 165, .06) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+section.alt { background: #170A29; }
+.nav { background: rgba(18, 6, 31, .92); }
+.btn { color: var(--text); border-color: var(--rust); }
+.btn.primary { color: #FFFFFF; background: var(--yellow); border-color: var(--ink); box-shadow: 0 0 0 3px var(--ink), 6px 6px 0 var(--rust), 0 0 24px rgba(255, 62, 165, .45); }
+.kicker, .yellow, .logo { color: var(--rust); text-shadow: 0 0 10px rgba(41, 231, 255, .55); }
+.chip { color: var(--rust); border-color: var(--rust); background: rgba(41, 231, 255, .08); }
+.pixel-frame { border-color: var(--rust); box-shadow: 0 0 0 4px var(--ink), 0 0 0 8px var(--yellow), 0 0 40px rgba(255, 62, 165, .35); }
+.cta { background: linear-gradient(90deg, #FF3EA5, #8A4FFF); color: #FFFFFF; }
+.what h2 .yellow { text-shadow: 0 0 18px rgba(255, 62, 165, .6); }
