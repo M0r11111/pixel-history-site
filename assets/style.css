@@ -196,7 +196,7 @@ footer .wrap { display: flex; justify-content: space-between; align-items: cente
 footer nav { display: flex; gap: 24px; }
 
 /* модалка */
-.modal { position: fixed; inset: 0; background: rgba(18, 21, 14, .85); display: none; place-items: center; z-index: 50; padding: 16px; }
+.modal { position: fixed; inset: 0; background: rgba(16, 16, 26, .85); display: none; place-items: center; z-index: 50; padding: 16px; }
 .modal.open { display: grid; }
 .modal .panel { max-width: 520px; width: 100%; display: grid; gap: 18px; text-align: center; justify-items: center; }
 

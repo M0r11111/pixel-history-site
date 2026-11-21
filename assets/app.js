@@ -77,5 +77,39 @@
     }
   });
 
+  // ---------- проект в разработке ----------
+  // Пока создание игр не запущено: плашка на всех страницах (кроме страницы-подарка)
+  // и окно вместо генерации. В день запуска поставить IN_DEV = false.
+  const IN_DEV = true;
+  window.PH.inDev = IN_DEV;
+  function devNotice() {
+    let m = document.getElementById('devModal');
+    if (!m) {
+      const home = /\/admin\//.test(location.pathname) ? '../' : '';
+      m = document.createElement('div'); m.className = 'modal'; m.id = 'devModal';
+      m.innerHTML = `<div class="panel hot"><canvas data-icon="cartridge" data-outline style="width:72px;background:var(--surface2);padding:8px"></canvas>
+        <h3>Проект в разработке</h3>
+        <p class="muted small">Pixel History ещё не запущен: создание игр пока не работает, поэтому сейчас ничего не сгенерируется.
+        Уже можно поиграть в демо «Не с первого раза» и собрать своих героев в конструкторе. Скоро откроемся!</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center"><a class="btn primary" href="${home}play.html">Играть в демо</a><button class="btn" data-close>Понятно</button></div></div>`;
+      document.body.appendChild(m); paint(m);
+    }
+    m.classList.add('open');
+  }
+  window.PH.devNotice = devNotice;
+  if (IN_DEV) document.addEventListener('DOMContentLoaded', () => {
+    if (/gift\.html$/.test(location.pathname)) return;
+    const st = document.createElement('style');
+    st.textContent = '.dev-strip{background:#2A2A3E;color:#F1FAEE;text-align:center;padding:9px 16px;font-size:13px;border-bottom:3px solid #F4C430}.dev-strip b{font-family:"Press Start 2P",monospace;font-size:10px;color:#F4C430;margin-right:8px}.dev-strip a{color:#F4C430;text-decoration:underline;margin-left:8px;cursor:pointer}';
+    document.head.appendChild(st);
+    const strip = document.createElement('div'); strip.className = 'dev-strip';
+    strip.innerHTML = '<b>ПРОЕКТ В РАЗРАБОТКЕ</b>Создание игр пока не работает — можно поиграть в демо и собрать героев.<a data-dev>Подробнее</a>';
+    const nav = document.querySelector('header.nav'); if (nav) nav.after(strip); else document.body.prepend(strip);
+    // кнопки, которые запускают создание или заказ игры, пока показывают окно
+    document.addEventListener('click', e => {
+      if (e.target.closest('#go, [data-dev]')) { e.preventDefault(); e.stopPropagation(); devNotice(); }
+    }, true);
+  });
+
   document.addEventListener('DOMContentLoaded', () => { paint(document); bindTags(document); });
 })();
