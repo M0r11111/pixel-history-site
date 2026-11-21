@@ -30,6 +30,9 @@
   #paintCanvas { width: 240px; height: 276px; max-width: 100%; image-rendering: pixelated; background: #101018; border: 3px solid var(--surface2); cursor: crosshair; touch-action: none; }
   .paint-tools { display: grid; gap: 10px; flex: 1; min-width: 150px; align-content: start; }
   .paint-tools .tags .tag { font-size: 12px; }
+  .paint-row { display: grid; gap: 4px; }
+  .paint-row .tag.off { opacity: .45; }
+  #paintHint.warn { color: var(--moss); font-weight: 700; }
   .paint-pal { display: grid; grid-template-columns: repeat(6, 26px); gap: 6px; }
   .paint-pal span { width: 26px; height: 26px; border: 2px solid #0A0A10; cursor: pointer; }
   .paint-pal span.on { outline: 3px solid var(--yellow); outline-offset: 1px; }
@@ -121,15 +124,16 @@
         </div><div class="swatches" data-key="bottom"></div></div>
         <div class="paint" id="paint">
           <b class="px yellow" style="font-size:11px">Свой узор на одежде</b>
-          <p class="muted small">Как скин в Майнкрафте: выберите цвет и рисуйте по клеткам одежды. Узор будет на герое во всей игре.</p>
+          <p class="muted small">Как скин в Майнкрафте: выберите, что рисуем — верх или низ, цвет — и рисуйте по клеткам одежды. Узор будет на герое во всей игре.</p>
           <div class="paint-wrap">
             <canvas id="paintCanvas" width="240" height="276"></canvas>
             <div class="paint-tools">
-              <div class="tags" data-single id="paintSide"><span class="tag on" data-v="front">Перед</span><span class="tag" data-v="back">Спина</span></div>
+              <div class="paint-row"><small class="muted">Что рисуем</small><div class="tags" data-single id="paintPart"><span class="tag on" data-v="top">Верх</span><span class="tag" data-v="bottom">Низ</span></div></div>
+              <div class="paint-row"><small class="muted">Сторона</small><div class="tags" data-single id="paintSide"><span class="tag on" data-v="front">Перед</span><span class="tag" data-v="back">Спина</span></div></div>
               <div class="tags" data-single id="paintTool"><span class="tag on" data-v="brush">Кисть</span><span class="tag" data-v="erase">Ластик</span><span class="tag" data-v="fill">Залить</span></div>
               <label class="small" style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="paintMirror"> Зеркально</label>
               <div class="paint-pal" id="paintPal"></div>
-              <button class="btn" id="paintClear" type="button">Стереть узор</button>
+              <button class="btn" id="paintClear" type="button">Стереть узор на этой части</button>
             </div>
           </div>
           <p class="muted small" id="paintHint"></p>
@@ -153,7 +157,7 @@
   </div>
 </main>
 
-<script src="assets/pixel.js?v=18"></script>
+<script src="assets/pixel.js?v=19"></script>
 <script src="assets/app.js?v=17"></script>
 <script src="assets/api.js?v=15"></script>
 <script>
@@ -321,24 +325,42 @@ function syncAll() {
 /* ---------- свой узор на одежде (как скин в Майнкрафте) ---------- */
 const pcv = $('#paintCanvas'), pctx = pcv.getContext('2d'), PS = 12, OX = 2, OY = 13;   // клетка 12px, видно туловище и ноги
 const PAINT_PAL = ['#F1FAEE', '#1B1B28', '#E63946', '#3D7DD8', '#F4C430', '#2E8A7A', '#C0508A', '#9B8AC4', '#FF8A3D', '#6FE38A', '#8A5A2E', '#A8B2C1'];
-let pSide = 'front', pTool = 'brush', pColor = '#F1FAEE', pDown = false;
-// клетки, на которых есть одежда (верх — торс, низ — подол платья/пальто/юбки)
-function paintMask() {
-  const m = new Set(), top = cur.topType && cur.topType !== 'none' ? cur.topType : null;
-  const add = (x0, x1, y0, y1) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) m.add(x + ',' + y); };
-  if (top) { add(9, 15, 18, 18); add(8, 16, 19, 25); }
-  const hem = top === 'dress' || top === 'coat' || ['skirt', 'longskirt'].includes(cur.bottomType) && top !== 'dress';
-  if (hem) { const end = top === 'coat' ? 30 : top === 'dress' ? 29 : cur.bottomType === 'longskirt' ? 32 : 29; add(8, 16, 26, 26); for (let y = 27; y <= end; y++) add(y > 30 ? 6 : 7, y > 30 ? 18 : 17, y, y); }
+let pSide = 'front', pTool = 'brush', pColor = '#F1FAEE', pDown = false, pPart = 'top';
+const TOPS = { tshirt: 'футболку', tank: 'майку', longsleeve: 'лонгслив', hoodie: 'худи', sweater: 'свитер', shirt: 'рубашку', jacket: 'куртку', coat: 'пальто', dress: 'платье' };
+// клетки выбранной части одежды. Верх — торс (+ подол платья/пальто), низ — штанины брюк/шорт или подол юбки.
+// Ключ узора: для торса и подола — «x,y», для штанин — «B:ряд:смещение» (узор двигается вместе с ногой).
+function partCells(part) {
+  const m = new Map(), top = cur.topType && cur.topType !== 'none' ? cur.topType : null, bot = top === 'dress' ? null : (cur.bottomType && cur.bottomType !== 'none' ? cur.bottomType : null);
+  const add = (x0, x1, y0, y1) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) m.set(x + ',' + y, x + ',' + y); };
+  const hem = end => { add(8, 16, 26, 26); for (let y = 27; y <= end; y++) add(y > 30 ? 6 : 7, y > 30 ? 18 : 17, y, y); };
+  if (part === 'top') {
+    if (top) { add(9, 15, 18, 18); add(8, 16, 19, 25); if (top === 'dress') hem(29); if (top === 'coat') hem(30); }
+  } else if (bot === 'pants' || bot === 'shorts') {
+    const rows = bot === 'pants' ? 7 : 3;
+    for (let i = 0; i < rows; i++) for (let j = -1; j <= 1; j++) {
+      if (top === 'coat' && 26 + i <= 30) continue;          // эту часть закрывает пальто
+      m.set((10 + j) + ',' + (26 + i), 'B:' + i + ':' + j); m.set((14 + j) + ',' + (26 + i), 'F:' + i + ':' + j);
+    }
+  } else if ((bot === 'skirt' || bot === 'longskirt') && top !== 'coat') hem(bot === 'longskirt' ? 32 : 29);
   return m;
+}
+function paintMask() { return partCells(pPart); }
+function partEmptyText() {
+  if (pPart === 'top') return 'Чтобы рисовать на верхе, выберите его выше: футболку, худи, свитер, платье…';
+  if (cur.topType === 'dress') return 'Под платьем низа не видно — рисуйте на «Верх», это и есть платье.';
+  if (cur.topType === 'coat' && ['skirt', 'longskirt'].includes(cur.bottomType)) return 'Юбку закрывает пальто — выберите брюки или другой верх.';
+  return 'Чтобы рисовать на низе, выберите его выше: брюки, шорты или юбку.';
 }
 function drawPaint() {
   const W = pcv.width, H = pcv.height;
   pctx.imageSmoothingEnabled = false; pctx.fillStyle = '#101018'; pctx.fillRect(0, 0, W, H);
   PX.drawPose(pctx, cur, PS, -OX * PS, -OY * PS, pSide, null, false);
+  document.querySelectorAll('#paintPart .tag').forEach(t => { t.classList.toggle('on', t.dataset.v === pPart); t.classList.toggle('off', !partCells(t.dataset.v).size); });
   const m = paintMask();
   pctx.fillStyle = 'rgba(255,255,255,.14)';
   m.forEach(k => { const [x, y] = k.split(',').map(Number); const px = (x - OX) * PS, py = (y - OY) * PS; pctx.fillRect(px, py, PS, 1); pctx.fillRect(px, py, 1, PS); });
-  $('#paintHint').textContent = m.size ? 'Рисовать можно по светлой сетке — это одежда. ' + (pSide === 'front' ? 'Сбоку герой покажет перед.' : '') : 'Сначала выберите верх (футболку, худи…) или платье, юбку — и рисуйте на них.';
+  const hint = $('#paintHint'); hint.classList.toggle('warn', !m.size);
+  hint.textContent = m.size ? 'Рисуете: ' + (pPart === 'top' ? 'верх' : 'низ') + '. Клетки со светлой сеткой — это одежда. ' + (pSide === 'front' ? 'Сбоку герой покажет перед.' : '') : partEmptyText();
   const pal = $('#paintPal');
   if (!pal.childElementCount) {
     PAINT_PAL.forEach(c => { const s = document.createElement('span'); s.style.background = c; s.dataset.c = c; s.onclick = () => { pColor = c; markPal(); }; pal.appendChild(s); });
@@ -350,10 +372,12 @@ function drawPaint() {
 function markPal() { $('#paintPal').querySelectorAll('span').forEach(s => s.classList.toggle('on', s.dataset.c === pColor)); }
 function paintAt(e) {
   const r = pcv.getBoundingClientRect(), x = Math.floor(((e.clientX - r.left) * pcv.width / r.width) / PS) + OX, y = Math.floor(((e.clientY - r.top) * pcv.height / r.height) / PS) + OY;
-  const m = paintMask(); if (!m.has(x + ',' + y) && pTool !== 'fill') return;
+  const m = paintMask();
+  if (!m.size) { const h = $('#paintHint'); h.classList.remove('warn'); void h.offsetWidth; h.classList.add('warn'); return; }
+  if (!m.has(x + ',' + y) && pTool !== 'fill') return;
   cur.paint = cur.paint || {}; const side = cur.paint[pSide] = cur.paint[pSide] || {};
-  if (pTool === 'fill') { if (!m.size) return; m.forEach(k => side[k] = pColor); }
-  else [x, $('#paintMirror').checked ? 24 - x : null].forEach(xx => { if (xx === null || !m.has(xx + ',' + y)) return; if (pTool === 'erase') delete side[xx + ',' + y]; else side[xx + ',' + y] = pColor; });
+  if (pTool === 'fill') m.forEach(k => side[k] = pColor);
+  else [x, $('#paintMirror').checked ? 24 - x : null].forEach(xx => { if (xx === null) return; const k = m.get(xx + ',' + y); if (!k) return; if (pTool === 'erase') delete side[k]; else side[k] = pColor; });
   cur.mannequin = false; drawPaint(); renderListSoon();
 }
 let listT = 0; function renderListSoon() { clearTimeout(listT); listT = setTimeout(renderList, 250); }
@@ -362,10 +386,21 @@ pcv.addEventListener('pointermove', e => { if (pDown && pTool !== 'fill') paintA
 ['pointerup', 'pointercancel'].forEach(ev => pcv.addEventListener(ev, () => { pDown = false; }));
 $('#paintSide').addEventListener('pick', e => { pSide = e.detail; view = e.detail; document.querySelectorAll('#views .tag').forEach(t => t.classList.toggle('on', t.dataset.v === view)); drawPaint(); });
 $('#paintTool').addEventListener('pick', e => { pTool = e.detail; });
-$('#paintClear').onclick = () => { if (cur.paint && cur.paint[pSide]) delete cur.paint[pSide]; drawPaint(); renderList(); };
+$('#paintClear').onclick = () => {   // стираем только выбранную часть на выбранной стороне
+  const side = cur.paint && cur.paint[pSide]; if (!side) return;
+  const keys = new Set(partCells(pPart).values());
+  Object.keys(side).forEach(k => { if (keys.has(k) || (pPart === 'bottom' && k.indexOf(':') >= 0)) delete side[k]; });
+  drawPaint(); renderList();
+};
+$('#paintPart').addEventListener('pick', e => { pPart = e.detail; drawPaint(); });
 
 document.querySelectorAll('.editor .tags[data-key]').forEach(g => {
-  g.addEventListener('pick', e => { cur[g.dataset.key] = e.detail; cur.mannequin = false; play(null); syncAll(); });
+  g.addEventListener('pick', e => {
+    cur[g.dataset.key] = e.detail; cur.mannequin = false;
+    if (g.dataset.key === 'topType' && e.detail !== 'none') pPart = 'top';
+    if (g.dataset.key === 'bottomType' && e.detail !== 'none') pPart = 'bottom';
+    play(null); syncAll();
+  });
 });
 $('#tabs').addEventListener('pick', e => { document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('on', p.dataset.pane === e.detail)); });
 $('#views').addEventListener('pick', e => { view = e.detail; play(null); });

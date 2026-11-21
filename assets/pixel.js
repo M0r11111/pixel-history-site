@@ -116,7 +116,7 @@ function PXFactory(global) {
     const AC = o.accColor || null;   // цвет аксессуара (кепка, шапка, шарф, наушники)
 
     // толстая линия по точкам (руки, ноги); col(t) — цвет по доле длины 0..1
-    function line(pts, th, col, pad) {
+    function line(pts, th, col, pad, cell) {   // cell(u, dx) — свой цвет отдельной клетки (узор на штанинах)
       let total = 0; for (let i = 1; i < pts.length; i++) total += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
       let acc = 0;
       for (let i = 1; i < pts.length; i++) {
@@ -124,7 +124,7 @@ function PXFactory(global) {
         for (let s = 0; s <= steps; s++) {
           const x = Math.round(ax + (bx - ax) * s / steps), y = Math.round(ay + (by - ay) * s / steps), c = col((acc + seg * s / steps) / total);
           if (th === 2) R(x - (pad || 0), x + 1 + (pad || 0), y - (pad || 0), y + 1 + (pad || 0), c);
-          else R(x - 1 - (pad || 0), x + 1 + (pad || 0), y - (pad || 0), y + (pad || 0), c);
+          else { R(x - 1 - (pad || 0), x + 1 + (pad || 0), y - (pad || 0), y + (pad || 0), c); if (cell) for (let dx = -1; dx <= 1; dx++) { const c2 = cell((acc + seg * s / steps) / total, dx); if (c2) set(x + dx, y, c2); } }
         }
         acc += seg;
       }
@@ -134,11 +134,13 @@ function PXFactory(global) {
       if (outlined) line(pts, 2, () => OUT, 1);
       line(pts, 2, u => (u < sleeve ? s1 : s2));
     }
-    function leg(pts, back, outlined) {
+    function leg(pts, back, outlined, which) {
       const f = back ? 0.78 : 1, skin = shade(sk, f), pants = shade(b, f);
       const cover = bot === 'pants' ? 0.97 : bot === 'shorts' ? 0.42 : 0;
       if (outlined) line(pts, 3, () => OUT, 1);
-      line(pts, 3, u => (u < cover ? pants : skin));
+      // узор на штанине: ключ «B:ряд:смещение» — ряд вдоль ноги (0…6), поэтому узор идёт вместе с ногой при ходьбе
+      const src = cover && which && o.paint && (view === 'back' ? o.paint.back : o.paint.front);
+      line(pts, 3, u => (u < cover ? pants : skin), 0, src ? (u, dx) => { if (u >= cover) return null; const c = src[which + ':' + Math.round(u * 7) + ':' + dx]; return c ? shade(c, f) : null; } : null);
       const [fx, fy] = pts[pts.length - 1], dir = view === 'side' ? 1 : (pts[0][0] < 12 ? 0 : 1);
       if (shoe) { const c = shade(shoe, f); R(fx - 1, fx + 1 + dir, fy, fy + 1, c); R(fx - 1, fx + 1 + dir, fy + 1, fy + 1, shade(c, 0.65)); set(fx + dir, fy, shade(c, 1.3)); }
       else R(fx - 1, fx + dir, fy + 1, fy + 1, skin);
@@ -291,6 +293,7 @@ function PXFactory(global) {
     function applyPaint(y0, y1) {
       const src = o.paint && (view === 'back' ? o.paint.back : o.paint.front); if (!src) return;
       for (const k in src) {
+        if (k.indexOf(':') >= 0) continue;   // это узор штанин, он рисуется в leg()
         const i = k.indexOf(','), x = +k.slice(0, i), y = +k.slice(i + 1);
         if (y < y0 || y > y1) continue;
         if (view === 'side') { if (x < 8 || x > 16) continue; set(9 + Math.round((x - 8) * 6 / 8), y, src[k]); }
@@ -388,9 +391,9 @@ function PXFactory(global) {
       const legs = LEGS.side[P.legs] || LEGS.side.stand;
       upper(); hairBack(); hood();
       arm(ARMS.side[P.armB] || ARMS.side.down, true, false);
-      lower(); leg(legs.B, true, false);
+      lower(); leg(legs.B, true, false, 'B');
       upper(); torso();
-      lower(); leg(legs.F, false, true);
+      lower(); leg(legs.F, false, true, 'F');
       upper(); skirt(); head(); hairFront(); acc();
       arm(ARMS.side[P.armF] || ARMS.side.down, false, true);
     } else {
@@ -398,7 +401,7 @@ function PXFactory(global) {
       const af = ARMS.front[P.armF] || ARMS.front.down, ab = (ARMS.front[P.armB] || ARMS.front.down).map(([x, y]) => [24 - x, y]);
       upper(); hairBack(); if (view === 'front') hood();
       if (view === 'front') arm(ab, true, false);
-      lower(); leg(legs.B, false, false); leg(legs.F, false, false);
+      lower(); leg(legs.B, false, false, 'B'); leg(legs.F, false, false, 'F');
       upper(); torso(); skirt(); head(); hairFront(); acc();
       if (view === 'back') { arm(ab.map(([x, y]) => [24 - x, y]).map(([x, y]) => [24 - x, y]), false, false); arm(af, false, false); }
       else arm(af, false, false);
