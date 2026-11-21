@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Личный кабинет — Pixel History</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css?v=7">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="index.html"><canvas data-icon="mushroom"></canvas>PIXEL HISTORY</a>
+    <nav class="nav-links"><a href="index.html#how">Как это работает</a><a href="play.html">Демо</a><a href="index.html#pricing">Цены</a></nav>
+    <a class="btn" href="create.html">Создать игру</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="page-head">
+    <span class="kicker">// Личный кабинет</span>
+    <h1 style="font-size:clamp(18px,3vw,26px)" id="hello">Загрузка…</h1>
+  </div>
+
+  <div class="acc-grid">
+    <section style="padding:0;display:grid;gap:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <h2 style="font-size:16px">Мои игры</h2>
+        <a class="btn primary" href="create.html?new=1">+ Новая игра</a>
+      </div>
+      <div id="games" style="display:grid;gap:12px"></div>
+    </section>
+
+    <aside style="display:grid;gap:20px">
+      <div class="panel" style="display:grid;gap:14px">
+        <h3>Профиль</h3>
+        <div class="opt-group"><b>Имя</b><div style="display:flex;gap:8px"><input class="field" id="name" maxlength="80" style="padding:10px"><button class="btn" id="saveName">OK</button></div></div>
+        <div class="sum-row"><span>Почта</span><span id="email">—</span></div>
+        <div class="sum-row"><span>Телефон</span><span id="phone">—</span></div>
+        <div id="linkBox" style="display:grid;gap:10px">
+          <div class="tags" data-single id="linkCh"><span class="tag on" data-v="email">+ Почта</span><span class="tag" data-v="phone">+ Телефон</span></div>
+          <div style="display:flex;gap:8px"><input class="field" id="linkTarget" placeholder="you@mail.kz" style="padding:10px"><button class="btn" id="linkSend">Код</button></div>
+          <div style="display:flex;gap:8px" id="linkCodeRow" hidden><input class="field" id="linkCode" placeholder="Код" maxlength="6" style="padding:10px"><button class="btn" id="linkVerify">Привязать</button></div>
+          <div class="dev-note" id="linkDev" hidden></div>
+        </div>
+        <p class="err" id="profErr"></p>
+      </div>
+
+      <div class="panel" style="display:grid;gap:12px">
+        <h3>Способы входа</h3>
+        <div id="identities" style="display:grid;gap:8px"></div>
+        <div class="social" id="linkSocial"></div>
+      </div>
+
+      <div class="panel" style="display:grid;gap:10px">
+        <h3>Безопасность</h3>
+        <button class="btn block" id="logout">Выйти</button>
+        <button class="btn block" id="logoutAll">Выйти на всех устройствах</button>
+        <button class="btn block" id="del" style="border-color:var(--rust);color:var(--rust)">Удалить аккаунт</button>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script src="assets/pixel.js?v=7"></script>
+<script src="assets/app.js?v=7"></script>
+<script src="assets/api.js?v=7"></script>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fmt = n => (n || 0).toLocaleString('ru-RU') + ' ₸';
+const NAMES = { google: 'Google', vk: 'ВКонтакте', facebook: 'Facebook', x: 'X (Twitter)', telegram: 'Telegram' };
+let me = null, linkCh = 'email', pollT = null;
+
+function renderMe() {
+  $('#hello').textContent = 'Привет' + (me.name ? ', ' + me.name : '') + '!';
+  $('#name').value = me.name || '';
+  $('#email').textContent = me.email || '—';
+  $('#phone').textContent = me.phone || '—';
+  const ids = me.identities.map(i => `<div class="sum-row"><span>${esc(NAMES[i.provider] || i.provider)}</span><span>${esc(i.display)} <a href="#" data-unlink="${i.provider}" class="muted">✕</a></span></div>`);
+  if (me.email) ids.unshift(`<div class="sum-row"><span>Код на почту</span><span>${esc(me.email)}</span></div>`);
+  if (me.phone) ids.unshift(`<div class="sum-row"><span>SMS-код</span><span>${esc(me.phone)}</span></div>`);
+  $('#identities').innerHTML = ids.join('') || '<p class="muted small">Нет привязок</p>';
+}
+
+function badge(g) {
+  const cls = g.status === 'ready' ? 'ready' : (g.status === 'failed' || g.status === 'blocked') ? 'bad' : 'work';
+  return `<span class="badge-s ${cls}">${esc(g.status_ru)}</span>`;
+}
+async function loadGames() {
+  const games = await PHAPI.api('/api/games');
+  const box = $('#games');
+  if (!games.length) { box.innerHTML = '<div class="panel" style="text-align:center;display:grid;gap:14px;justify-items:center"><canvas data-icon="gift" data-outline style="width:80px"></canvas><p class="muted">Пока нет игр. Сделайте первую — превью бесплатно.</p><a class="btn primary" href="create.html?new=1">Создать игру</a></div>'; PH.paint(box); return; }
+  box.innerHTML = games.map(g => `<div class="game-row">
+    <div><h4>${esc(g.title)}</h4>
+      <div class="meta">${badge(g)}${g.mode === 'human' ? 'Делает человек' : 'Делает ИИ'} · ${fmt(g.price_kzt)} · ${g.paid ? '<span class="moss">оплачено</span>' : 'не оплачено'}${g.levels ? ' · ' + g.levels + ' ур.' : ''}${g.views ? ' · открыли ' + g.views + ' раз' : ''}</div>
+      ${g.status === 'generating' ? `<div class="mini-bar"><i style="width:${g.progress}%"></i></div><div class="meta">${esc(g.stage)}</div>` : ''}
+      ${g.error ? `<div class="err">${esc(g.error)}</div>` : ''}
+      ${g.url ? `<div class="meta" style="margin-top:6px">Ссылка: <a class="yellow" href="${esc(g.url)}" target="_blank">${esc(g.url)}</a></div>` : ''}
+    </div>
+    <div class="acts">
+      ${g.status === 'ready' ? `<a class="btn" href="play.html?id=${g.id}">Играть</a>` : ''}
+      ${g.url ? `<button class="btn" data-copy="${esc(g.url)}">Копировать</button>` : ''}
+      <a class="btn ${g.status === 'ready' && !g.url ? 'primary' : ''}" href="create.html?game=${g.id}">${g.status === 'ready' ? (g.url ? 'Изменить' : 'Подарить') : g.status === 'draft' || g.status === 'failed' ? 'Продолжить' : 'Открыть'}</a>
+      <button class="btn" data-del="${g.id}" title="Удалить">✕</button>
+    </div></div>`).join('');
+  clearTimeout(pollT);
+  if (games.some(g => g.status === 'generating')) pollT = setTimeout(loadGames, 2500);
+}
+
+$('#games').addEventListener('click', async e => {
+  const c = e.target.closest('[data-copy]'), d = e.target.closest('[data-del]');
+  if (c) { navigator.clipboard && navigator.clipboard.writeText(c.dataset.copy); c.textContent = 'Готово ✓'; }
+  if (d && confirm('Удалить игру? Ссылка-подарок перестанет работать.')) { await PHAPI.api('/api/games/' + d.dataset.del, { method: 'DELETE' }); loadGames(); }
+});
+$('#saveName').onclick = async () => { try { me = await PHAPI.api('/api/me', { method: 'PATCH', body: { name: $('#name').value } }); renderMe(); } catch (e) { $('#profErr').textContent = e.message; } };
+$('#linkCh').addEventListener('pick', e => { linkCh = e.detail; $('#linkTarget').placeholder = linkCh === 'email' ? 'you@mail.kz' : '+7 700 000 00 00'; });
+$('#linkSend').onclick = async () => {
+  $('#profErr').textContent = '';
+  try { const r = await PHAPI.api('/api/auth/code/start', { method: 'POST', body: { channel: linkCh, target: $('#linkTarget').value } }); $('#linkCodeRow').hidden = false; $('#linkDev').hidden = !r.dev_code; $('#linkDev').textContent = 'Код (режим разработки): ' + (r.dev_code || ''); }
+  catch (e) { $('#profErr').textContent = e.message; }
+};
+$('#linkVerify').onclick = async () => {
+  try { me = await PHAPI.api('/api/auth/code/verify', { method: 'POST', body: { channel: linkCh, target: $('#linkTarget').value, code: $('#linkCode').value, link: true } }); renderMe(); $('#linkCodeRow').hidden = true; $('#linkDev').hidden = true; $('#linkTarget').value = ''; }
+  catch (e) { $('#profErr').textContent = e.message; }
+};
+$('#identities').addEventListener('click', async e => {
+  const u = e.target.closest('[data-unlink]'); if (!u) return; e.preventDefault();
+  try { me = await PHAPI.api('/api/me/identity/' + u.dataset.unlink, { method: 'DELETE' }); renderMe(); } catch (er) { $('#profErr').textContent = er.message; }
+});
+$('#logout').onclick = async () => { await PHAPI.api('/api/auth/logout', { method: 'POST' }); location.href = '/'; };
+$('#logoutAll').onclick = async () => { await PHAPI.api('/api/auth/logout?all=1', { method: 'POST' }); location.href = '/login.html'; };
+$('#del').onclick = async () => {
+  const w = prompt('Аккаунт и все игры будут удалены навсегда, ссылки-подарки перестанут работать. Чтобы подтвердить, напишите: УДАЛИТЬ');
+  if (w && w.trim().toUpperCase() === 'УДАЛИТЬ') { await PHAPI.api('/api/me', { method: 'DELETE' }); location.href = '/'; }
+};
+
+(async () => {
+  if (!(await PHAPI.serverUp())) { $('#hello').textContent = 'Кабинет работает, когда сайт открыт через сервер'; return; }
+  me = await PHAPI.me();
+  if (!me) { location.href = PHAPI.loginUrl(); return; }
+  renderMe(); loadGames();
+  const { oauth } = await PHAPI.api('/api/auth/providers');
+  $('#linkSocial').innerHTML = oauth.filter(p => p.id !== 'telegram' && !me.identities.some(i => i.provider === p.id))
+    .map(p => `<a class="btn" href="/api/auth/oauth/${p.id}/start?link=1&next=/account.html">+ ${esc(p.name)}</a>`).join('');
+})();
+</script>
+</body>
+</html>

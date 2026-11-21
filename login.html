@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Вход — Pixel History</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css?v=7">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="index.html"><canvas data-icon="mushroom"></canvas>PIXEL HISTORY</a>
+    <nav class="nav-links"><a href="index.html#how">Как это работает</a><a href="play.html">Демо</a><a href="index.html#pricing">Цены</a></nav>
+    <a class="btn" href="create.html">Создать</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="auth-box panel hot">
+    <canvas data-icon="frog" data-outline style="width:72px;background:var(--surface2);padding:8px;justify-self:center"></canvas>
+    <h1 style="font-size:18px;text-align:center">Вход в Pixel History</h1>
+    <p class="muted small" style="text-align:center">Регистрация не нужна — просто войдите удобным способом. Новый аккаунт создастся сам.</p>
+
+    <div id="offline" class="dev-note" hidden>Вход работает, когда сайт открыт через сервер (см. ЗАПУСК.md).</div>
+
+    <div id="step1" style="display:grid;gap:14px">
+      <div class="tags" data-single id="channel"><span class="tag on" data-v="phone">Телефон</span><span class="tag" data-v="email">Почта</span></div>
+      <input class="field" id="target" inputmode="tel" autocomplete="tel" placeholder="+7 700 000 00 00">
+      <button class="btn primary block" id="send">Получить код</button>
+    </div>
+
+    <div id="step2" hidden style="display:grid;gap:14px">
+      <p class="small">Мы отправили код на <b class="yellow" id="sentTo"></b>. <a href="#" id="change" class="muted">Изменить</a></p>
+      <div class="dev-note" id="devCode" hidden></div>
+      <input class="field code-input" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••">
+      <button class="btn primary block" id="verify">Войти</button>
+      <button class="btn block" id="resend" disabled>Отправить ещё раз</button>
+    </div>
+    <p class="err" id="err"></p>
+
+    <div class="divider">или через</div>
+    <div class="social" id="social"></div>
+    <div id="tg" style="display:flex;justify-content:center"></div>
+    <p class="muted small" id="socialNote" style="text-align:center"></p>
+    <p class="muted small" style="text-align:center">Входя, вы соглашаетесь с условиями сервиса и обработкой персональных данных.</p>
+  </div>
+</main>
+
+<script src="assets/pixel.js?v=7"></script>
+<script src="assets/app.js?v=7"></script>
+<script src="assets/api.js?v=7"></script>
+<script>
+const $ = s => document.querySelector(s);
+const q = new URLSearchParams(location.search);
+const next = (q.get('next') || '').startsWith('/') && !(q.get('next') || '').startsWith('//') ? q.get('next') : '/account.html';
+let channel = 'phone', target = '', timer = null;
+const ERR = { oauth: 'Не получилось войти через соцсеть. Попробуйте ещё раз.', taken: 'Этот аккаунт соцсети уже привязан к другому пользователю.', blocked: 'Аккаунт заблокирован. Напишите в поддержку.' };
+if (q.get('error')) $('#err').textContent = ERR[q.get('error')] || 'Ошибка входа';
+
+$('#channel').addEventListener('pick', e => {
+  channel = e.detail; const t = $('#target');
+  t.value = ''; t.placeholder = channel === 'phone' ? '+7 700 000 00 00' : 'you@mail.kz';
+  t.inputMode = channel === 'phone' ? 'tel' : 'email'; t.autocomplete = channel === 'phone' ? 'tel' : 'email'; t.focus();
+});
+
+function cooldown(sec) {
+  const b = $('#resend'); b.disabled = true; clearInterval(timer);
+  timer = setInterval(() => { sec--; b.textContent = sec > 0 ? `Отправить ещё раз (${sec})` : 'Отправить ещё раз'; if (sec <= 0) { b.disabled = false; clearInterval(timer); } }, 1000);
+}
+async function send() {
+  $('#err').textContent = '';
+  try {
+    const r = await PHAPI.api('/api/auth/code/start', { method: 'POST', body: { channel, target: $('#target').value } });
+    target = r.target; $('#sentTo').textContent = target;
+    $('#step1').hidden = true; $('#step2').hidden = false; $('#code').value = ''; $('#code').focus();
+    $('#devCode').hidden = !r.dev_code; if (r.dev_code) $('#devCode').textContent = 'Режим разработки: SMS/почта не подключены. Ваш код: ' + r.dev_code;
+    cooldown(60);
+  } catch (e) { $('#err').textContent = e.message; }
+}
+async function verify() {
+  $('#err').textContent = '';
+  try { await PHAPI.api('/api/auth/code/verify', { method: 'POST', body: { channel, target, code: $('#code').value } }); location.href = next; }
+  catch (e) { $('#err').textContent = e.message; }
+}
+$('#send').onclick = send; $('#resend').onclick = send; $('#verify').onclick = verify;
+$('#target').addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+$('#code').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, ''); if (e.target.value.length === 6) verify(); });
+$('#change').onclick = e => { e.preventDefault(); $('#step2').hidden = true; $('#step1').hidden = false; };
+
+const ALL = [['google', 'Google'], ['vk', 'ВКонтакте'], ['facebook', 'Facebook'], ['x', 'X (Twitter)']];
+(async () => {
+  if (!(await PHAPI.serverUp())) { $('#offline').hidden = false; $('#step1').hidden = true; return; }
+  if (await PHAPI.me()) { location.href = next; return; }
+  const { oauth } = await PHAPI.api('/api/auth/providers');
+  const on = new Set(oauth.map(p => p.id));
+  $('#social').innerHTML = ALL.map(([id, name]) => `<button class="btn" data-p="${id}" ${on.has(id) ? '' : 'disabled title="Скоро"'}>${name}</button>`).join('');
+  $('#social').onclick = e => { const b = e.target.closest('[data-p]'); if (b && !b.disabled) location.href = `/api/auth/oauth/${b.dataset.p}/start?next=` + encodeURIComponent(next); };
+  const tg = oauth.find(p => p.id === 'telegram');
+  if (tg) {
+    window.onTelegramAuth = async user => { try { await PHAPI.api('/api/auth/telegram', { method: 'POST', body: user }); location.href = next; } catch (e) { $('#err').textContent = e.message; } };
+    const s = document.createElement('script'); s.async = true; s.src = 'https://telegram.org/js/telegram-widget.js?22';
+    s.dataset.telegramLogin = tg.bot; s.dataset.size = 'large'; s.dataset.onauth = 'onTelegramAuth(user)'; s.dataset.requestAccess = 'write';
+    $('#tg').appendChild(s);
+  }
+  if (!oauth.length) $('#socialNote').textContent = 'Соцсети и Telegram подключим, когда зарегистрируем приложения (ключи в настройках сервера).';
+})();
+</script>
+</body>
+</html>

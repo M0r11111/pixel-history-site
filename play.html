@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Играть — Pixel History</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css?v=7">
+<style>
+  .play-wrap { max-width: min(1100px, calc((100vh - 220px) * 16 / 9)); margin: 0 auto; }
+  .play-wrap .pixel-frame { background: var(--ink); }
+  .play-info { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; margin: 24px 0 64px; }
+  .keys { display: flex; gap: 18px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
+  .keys kbd { font-family: var(--pixel); font-size: 9px; padding: 4px 6px; border: 2px solid var(--surface2); color: var(--text); }
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="index.html"><canvas data-icon="mushroom"></canvas>PIXEL HISTORY</a>
+    <nav class="nav-links"><a href="index.html#how">Как это работает</a><a href="index.html#pricing">Цены</a></nav>
+    <a class="btn" href="create.html">Сделать свою</a>
+  </div>
+</header>
+
+<main class="wrap" style="padding-top:28px">
+  <div class="play-wrap">
+    <div class="page-head" style="padding-top:0">
+      <span class="kicker" id="kicker">// Демо-игра</span>
+      <h1 style="font-size:clamp(16px,2.4vw,24px)" id="gameTitle">Загрузка…</h1>
+    </div>
+    <div class="pixel-frame" id="game"></div>
+    <div class="play-info">
+      <div class="keys"><span><kbd>← →</kbd> идти</span><span><kbd>ПРОБЕЛ</kbd> прыгать</span><span><kbd>ENTER</kbd> дальше</span></div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <a class="btn primary" href="create.html">Сделать такую же</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="assets/pixel.js?v=7"></script>
+<script src="assets/app.js?v=7"></script>
+<script src="assets/api.js?v=7"></script>
+<script src="game/engine.js?v=7"></script>
+<script src="games/demo.js?v=7"></script>
+<script>
+  const q = new URLSearchParams(location.search);
+  let game = null;
+  if (q.get('g')) { game = PH.store.get('game_' + q.get('g'), null); document.getElementById('kicker').textContent = '// Ваша игра'; }
+  function run(g) {
+    document.getElementById('gameTitle').textContent = g.title;
+    document.title = g.title + ' — Pixel History';
+    PHGame.start(document.getElementById('game'), g);
+  }
+  if (q.get('id')) {   // своя игра с сервера (из кабинета)
+    document.getElementById('kicker').textContent = '// Ваша игра';
+    PHAPI.api('/api/games/' + encodeURIComponent(q.get('id'))).then(r => run(r.game || window.PH_DEMO), () => { location.href = PHAPI.loginUrl(); });
+  } else run(game || window.PH_DEMO);
+</script>
+</body>
+</html>

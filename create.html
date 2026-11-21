@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Создание игры — Pixel History</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css?v=7">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="index.html"><canvas data-icon="mushroom"></canvas>PIXEL HISTORY</a>
+    <nav class="nav-links"><a href="index.html#how">Как это работает</a><a href="index.html#demo">Демо</a><a href="index.html#pricing">Цены</a></nav>
+    <a class="btn" href="character.html">Герои</a>
+  </div>
+</header>
+
+<main class="wrap" id="builder">
+  <div class="page-head">
+    <a class="back" href="index.html">← На главную</a>
+    <h1 style="font-size:clamp(20px,3vw,28px)">Создаём вашу игру</h1>
+    <p class="muted">Заполните шаги — всё можно изменить до отправки.</p>
+    <div class="stepper">
+      <a href="#p1" class="done"><i>1</i>История</a>
+      <a href="#p2" class="active"><i>2</i>Герои</a>
+      <a href="#p3"><i>3</i>Моменты</a>
+      <a href="#p4"><i>4</i>Настройки</a>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="form">
+      <!-- кто делает -->
+      <div class="panel">
+        <div class="panel-head"><span class="n">00</span><h3>Кто делает игру</h3></div>
+        <div class="mode-switch" id="mode" style="margin-bottom:18px">
+          <button class="on" data-m="ai"><b>Делает ИИ</b><span>~5 минут · превью бесплатно</span></button>
+          <button data-m="human"><b>Делает человек</b><span>художник и сценарист · 3–5 дней</span></button>
+        </div>
+        <div class="opt-group"><b>Тариф</b>
+          <div class="tags" data-single id="plan">
+            <span class="tag" data-v="mini">Мини</span><span class="tag on" data-v="duo">Для двоих</span><span class="tag" data-v="crew">Компания</span>
+          </div>
+        </div>
+        <p class="muted small" id="planInfo"></p>
+      </div>
+
+      <!-- 1 история -->
+      <div class="panel" id="p1">
+        <div class="panel-head"><span class="n">01</span><h3>История</h3></div>
+        <textarea class="field" id="story" rows="6" maxlength="2000"></textarea>
+        <div class="tags" id="hints" style="margin-top:14px">
+          <span class="tag" data-add=" Как мы познакомились: ">+ Как познакомились</span>
+          <span class="tag" data-add=" Смешной случай: ">+ Смешной случай</span>
+          <span class="tag" data-add=" Важная дата: ">+ Важная дата</span>
+          <span class="tag" data-add=" Наша шутка: ">+ Наша шутка</span>
+        </div>
+      </div>
+
+      <!-- 2 герои -->
+      <div class="panel hot" id="p2">
+        <div class="panel-head"><span class="n">02</span><h3>Герои</h3></div>
+        <p class="muted small" style="margin-bottom:18px">Соберите героев в конструкторе — ИИ нарисует их во всех сценах именно такими.</p>
+        <div class="heroes" id="heroes"></div>
+        <div id="photos" hidden style="margin-top:18px">
+          <div class="free-strip human" style="margin:0"><div><b>ФОТО ДЛЯ ХУДОЖНИКА</b><span class="muted">Добавьте 2–3 фото каждого героя — художник нарисует портретное сходство.</span></div><label class="btn">Загрузить фото<input type="file" accept="image/*" multiple hidden id="photoInput"></label></div>
+          <p class="muted small" id="photoCount" style="margin-top:8px"></p>
+        </div>
+      </div>
+
+      <!-- 3 моменты -->
+      <div class="panel" id="p3">
+        <div class="panel-head"><span class="n">03</span><h3>Моменты</h3></div>
+        <p class="muted small" style="margin-bottom:18px">Каждый момент станет уровнем игры. Добавьте фото реального места — по нему будет нарисована локация.</p>
+        <div id="moments"></div>
+        <button class="btn" id="addMoment">+ Добавить момент</button>
+      </div>
+
+      <!-- 4 настройки -->
+      <div class="panel" id="p4">
+        <div class="panel-head"><span class="n">04</span><h3>Настройки игры</h3></div>
+        <div id="opts"></div>
+      </div>
+    </div>
+
+    <!-- итог -->
+    <aside class="panel hot sticky">
+      <h3>Превью игры</h3>
+      <div class="pixel-frame" style="box-shadow:none;border-width:2px"><canvas id="preview" width="640" height="400"></canvas></div>
+      <p class="muted small">Черновик. Финальная графика — после генерации.</p>
+      <div id="summary" style="display:grid;gap:10px"></div>
+      <div class="hr"></div>
+      <div class="sum-row" style="align-items:center"><span class="px" style="color:var(--text);font-size:12px" id="planName"></span><span class="px yellow" style="font-size:14px" id="total"></span></div>
+      <button class="btn primary block" id="go">Создать игру</button>
+      <p class="muted small" style="text-align:center" id="goNote"></p>
+    </aside>
+  </div>
+</main>
+
+<!-- генерация -->
+<main class="wrap gen" id="gen" hidden>
+  <span class="kicker">// Генерация</span>
+  <h1 style="font-size:clamp(18px,3vw,28px)">ИИ строит вашу игру…</h1>
+  <p class="muted">Обычно это занимает несколько минут. Можно закрыть вкладку — пришлём ссылку на почту.</p>
+  <div class="pixel-frame"><canvas id="genScene" width="640" height="400"></canvas></div>
+  <div style="width:100%;max-width:640px;display:flex;justify-content:space-between"><span class="px small">Прогресс</span><span class="px small yellow" id="pct">0%</span></div>
+  <div class="bar" id="bar"></div>
+  <div class="panel log" id="log"></div>
+</main>
+
+<!-- готово -->
+<main class="wrap" id="ready" hidden>
+  <div class="page-head"><span class="kicker">// Готово</span><h1 style="font-size:clamp(20px,3vw,30px)">Ваша игра готова!</h1><p class="muted">Пройдите её сами, поправьте, если нужно, — и подарите по ссылке.</p></div>
+  <div class="layout">
+    <div style="display:grid;gap:20px;align-content:start">
+      <div class="pixel-frame" id="testGame"></div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap"><button class="btn" id="edit">Изменить</button><button class="btn" id="regen">Пересоздать игру</button></div>
+      <p class="muted small">Это тестовый запуск — так игра будет выглядеть у получателя. Стрелки — идти, пробел — прыгать, Enter — дальше.</p>
+    </div>
+    <aside class="panel hot" style="display:grid;gap:20px">
+      <h3>Подарить</h3>
+      <div class="opt-group"><b>От кого</b><input class="field" id="from" maxlength="30" style="padding:12px" placeholder="Ваше имя"></div>
+      <div class="opt-group"><b>Открытка в начале</b><textarea class="field" id="card" rows="3" maxlength="300"></textarea></div>
+      <div class="opt-group"><b>Письмо в финале</b><textarea class="field" id="letter" rows="4" maxlength="500"></textarea></div>
+      <div class="opt-group"><b>Когда открыть</b>
+        <div class="tags" data-single id="when"><span class="tag on" data-v="now">Сразу</span><span class="tag" data-v="date">В дату</span></div>
+        <input class="field" type="datetime-local" id="openAt" hidden style="padding:12px">
+      </div>
+      <div class="opt-group"><b>Секретный вопрос (необязательно)</b>
+        <input class="field" id="sq" placeholder="Где мы познакомились?" style="padding:12px">
+        <input class="field" id="sa" placeholder="Ответ" style="padding:12px">
+      </div>
+      <button class="btn primary block" id="publish">Получить ссылку</button>
+      <div id="share" hidden style="display:grid;gap:14px">
+        <div class="hr"></div>
+        <div class="opt-group"><b>Ссылка-подарок</b>
+          <div style="display:flex;gap:10px"><input class="field" id="link" readonly style="padding:12px"><button class="btn" id="copy">Копировать</button></div>
+        </div>
+        <div class="tags"><a class="tag" id="tg" target="_blank" rel="noopener">Telegram</a><a class="tag" id="wa" target="_blank" rel="noopener">WhatsApp</a><a class="tag" id="openGift" target="_blank" rel="noopener">Открыть как получатель</a></div>
+        <p class="muted small">Прототип: пока сервер не подключён, ссылка открывается только в этом браузере.</p>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<!-- заявка человеку -->
+<main class="wrap gen" id="human" hidden>
+  <canvas data-icon="lantern" data-outline style="width:96px;background:var(--surface2);padding:10px"></canvas>
+  <span class="kicker">// Заявка принята</span>
+  <h1 style="font-size:clamp(18px,3vw,28px)">Художник уже читает вашу историю</h1>
+  <p class="muted" style="max-width:640px">Мы ответим в чате на сайте в течение часа: уточним детали и покажем первые эскизы героев. Готовая игра — через 3–5 дней.</p>
+  <div class="panel log" style="max-width:640px">
+    <div class="done"><b>[x]</b> Заявка и история получены</div>
+    <div class="now"><b>[&gt;]</b> Менеджер уточняет детали — до 1 часа</div>
+    <div><b>[ ]</b> Эскизы героев — 1 день</div>
+    <div><b>[ ]</b> Уровни и сюжет — 2–3 дня</div>
+    <div><b>[ ]</b> Превью, правки и ссылка — 3–5 дней</div>
+  </div>
+  <a class="btn" href="index.html">На главную</a>
+</main>
+
+<div class="modal" id="soon"><div class="panel hot"><h3>Скоро</h3><p class="muted small">Это прототип сайта — эта кнопка заработает, когда подключим генерацию игр.</p><button class="btn" data-close>Понятно</button></div></div>
+
+<script src="assets/pixel.js?v=7"></script>
+<script src="assets/app.js?v=7"></script>
+<script src="assets/api.js?v=7"></script>
+<script src="game/engine.js?v=7"></script>
+<script>
+const $ = s => document.querySelector(s);
+const PLANS = {
+  ai: { mini: { name: 'Мини', price: 4990, heroes: 2, levels: 3, time: 'готово за ~5 минут' }, duo: { name: 'Для двоих', price: 14990, heroes: 4, levels: 6, time: 'готово за ~5 минут' }, crew: { name: 'Компания', price: 29990, heroes: 12, levels: 12, time: 'готово за ~10 минут' }, extra: 990 },
+  human: { mini: { name: 'Мини', price: 9990, heroes: 2, levels: 3, time: 'готово за 3 дня' }, duo: { name: 'Для двоих', price: 24990, heroes: 4, levels: 6, time: 'готово за 3–5 дней' }, crew: { name: 'Компания', price: 59990, heroes: 12, levels: 12, time: 'готово за 5 дней' }, extra: 3990 }
+};
+const params = new URLSearchParams(location.search);
+const draft = PH.store.get('draft', {});
+const state = {
+  mode: params.get('mode') === 'human' ? 'human' : 'ai',
+  plan: ['mini', 'duo', 'crew'].includes(params.get('plan')) ? params.get('plan') : 'duo',
+  story: draft.story || 'Мы познакомились с Асем летом 2019 в горах под Алматы. Она потеряла рюкзак, а я весь день помогал его искать. Хочу игру, где мы снова ищем этот рюкзак, а в конце она находит записку от меня…',
+  heroes: PH.heroes(),
+  moments: [['Горы под Алматы', 'Где потерялся рюкзак'], ['Кафе у озера', 'Первое свидание и пролитый чай'], ['Записка в рюкзаке', 'Сюрприз в конце игры']],
+  opts: { 'Жанр': draft.genre || 'Платформер', 'Камера': draft.camera || 'Сбоку', 'Стиль': /8/.test(draft.style || '') ? '8-бит' : '16-бит', 'Атмосфера': draft.mood || 'Романтичная', 'Длина': '~10 минут' }
+};
+const OPTS = { 'Жанр': ['Платформер', 'РПГ', 'Квест', 'Головоломка', 'Аркада'], 'Камера': ['Сбоку', 'Сверху', 'Изометрия'], 'Стиль': ['8-бит', '16-бит'], 'Атмосфера': ['Уютная', 'Романтичная', 'Смешная', 'Ностальгия', 'Загадочная'], 'Длина': ['~5 минут', '~10 минут', '~20 минут'] };
+const fmt = n => n.toLocaleString('ru-RU').replace(/,/g, ' ') + ' ₸';
+
+// режим и тариф
+function setMode(m) {
+  state.mode = m;
+  document.querySelectorAll('#mode button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+  $('#photos').hidden = m !== 'human';
+  summary();
+}
+$('#mode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.m); });
+document.querySelectorAll('#plan .tag').forEach(t => t.classList.toggle('on', t.dataset.v === state.plan));
+$('#plan').addEventListener('pick', e => { state.plan = e.detail; summary(); });
+
+// история
+$('#story').value = state.story;
+$('#story').addEventListener('input', e => state.story = e.target.value);
+$('#hints').addEventListener('click', e => { const t = e.target.closest('.tag'); if (!t) return; const s = $('#story'); s.value = s.value.trimEnd() + t.dataset.add; s.focus(); state.story = s.value; });
+
+// герои
+function renderHeroes() {
+  const box = $('#heroes'); box.innerHTML = '';
+  state.heroes.forEach(h => {
+    const c = document.createElement('div'); c.className = 'hero-card';
+    c.innerHTML = `<div class="portrait"><canvas></canvas></div><b class="px" style="font-size:12px"></b><span class="moss small"></span><a class="btn" href="character.html">Изменить</a>`;
+    c.querySelector('b').textContent = h.name; c.querySelector('span').textContent = h.role;
+    PX.renderChar(c.querySelector('canvas'), h, 1); box.appendChild(c);
+  });
+  const add = document.createElement('a'); add.className = 'hero-card add'; add.href = 'character.html';
+  add.innerHTML = '<span class="px" style="font-size:28px">+</span><span class="small">Новый герой</span>'; box.appendChild(add);
+}
+$('#photoInput').addEventListener('change', e => { $('#photoCount').textContent = 'Выбрано фото: ' + e.target.files.length; });
+
+// моменты
+function renderMoments() {
+  const box = $('#moments'); box.innerHTML = '';
+  state.moments.forEach((m, i) => {
+    const r = document.createElement('div'); r.className = 'moment';
+    const last = i === state.moments.length - 1 && state.moments.length > 1;
+    r.innerHTML = `<span class="muted">≡</span><span class="lvl">${last ? 'ФИНАЛ' : 'УРОВЕНЬ ' + (i + 1)}</span><div style="flex:1;display:grid;min-width:0"><input><input class="sub"></div>
+      <label class="photo-slot" title="Фото места: по нему будет нарисована локация">${m[2] ? `<img src="${m[2].pixel}" alt="">` : '<span>+ ФОТО</span>'}<input type="file" accept="image/*" hidden></label>
+      <button class="del" title="Удалить">✕</button>`;
+    const [a, b] = r.querySelectorAll('input:not([type=file])'); a.value = m[0]; b.value = m[1]; a.placeholder = 'Место или событие'; b.placeholder = 'Что там произошло';
+    a.oninput = () => m[0] = a.value; b.oninput = () => m[1] = b.value;
+    r.querySelector('input[type=file]').onchange = async e => {
+      const f = e.target.files[0]; if (!f) return;
+      try { m[2] = await photoToLevel(f, state.opts['Стиль']); renderMoments(); } catch (err) { alert('Не получилось прочитать фото'); }
+    };
+    r.querySelector('button.del').onclick = () => { state.moments.splice(i, 1); renderMoments(); summary(); };
+    box.appendChild(r);
+  });
+}
+$('#addMoment').onclick = () => { state.moments.push(['', '']); renderMoments(); summary(); };
+
+// Фото реального места → (1) уменьшенная копия для ИИ/художника, (2) пиксельный фон уровня
+function loadImage(file) { return new Promise((ok, fail) => { const r = new FileReader(); r.onload = () => { const im = new Image(); im.onload = () => ok(im); im.onerror = fail; im.src = r.result; }; r.onerror = fail; r.readAsDataURL(file); }); }
+async function photoToLevel(file, style) {
+  const im = await loadImage(file);
+  // копия для генерации (до 800px)
+  const k = Math.min(1, 800 / Math.max(im.width, im.height));
+  const c1 = document.createElement('canvas'); c1.width = Math.round(im.width * k); c1.height = Math.round(im.height * k);
+  c1.getContext('2d').drawImage(im, 0, 0, c1.width, c1.height);
+  const original = c1.toDataURL('image/jpeg', 0.72);
+  // пиксельный фон 16:9 (8-бит — крупнее и меньше цветов)
+  const eight = /8/.test(style || ''), pw = eight ? 80 : 128, ph = Math.round(pw * 9 / 16), levels = eight ? 6 : 10;
+  const c2 = document.createElement('canvas'); c2.width = pw; c2.height = ph;
+  const x2 = c2.getContext('2d'); x2.imageSmoothingEnabled = true;
+  const ar = pw / ph, iar = im.width / im.height;
+  const sw = iar > ar ? im.height * ar : im.width, sh = iar > ar ? im.height : im.width / ar;
+  x2.drawImage(im, (im.width - sw) / 2, (im.height - sh) / 2, sw, sh, 0, 0, pw, ph);
+  const d = x2.getImageData(0, 0, pw, ph), q = 255 / (levels - 1);
+  // чуть больше насыщенности, затем ограничение палитры
+  for (let i = 0; i < d.data.length; i += 4) {
+    const avg = (d.data[i] + d.data[i + 1] + d.data[i + 2]) / 3;
+    for (let j = 0; j < 3; j++) { const v = Math.max(0, Math.min(255, avg + (d.data[i + j] - avg) * 1.25)); d.data[i + j] = Math.round(Math.round(v / q) * q); }
+  }
+  x2.putImageData(d, 0, 0);
+  return { pixel: c2.toDataURL('image/png'), original };
+}
+
+// настройки
+const optsBox = $('#opts');
+Object.entries(OPTS).forEach(([k, list]) => {
+  const g = document.createElement('div'); g.className = 'opt-group';
+  g.innerHTML = `<b>${k}</b><div class="tags" data-single>${list.map(v => `<span class="tag${v === state.opts[k] ? ' on' : ''}">${v}</span>`).join('')}</div>`;
+  g.querySelector('.tags').addEventListener('pick', e => { state.opts[k] = e.detail; summary(); });
+  optsBox.appendChild(g);
+});
+
+// итог
+function summary() {
+  const P = PLANS[state.mode], p = P[state.plan];
+  const extraH = Math.max(0, state.heroes.length - p.heroes), extraL = Math.max(0, state.moments.length - p.levels);
+  const total = p.price + (extraH + extraL) * P.extra;
+  const rows = [['Кто делает', state.mode === 'ai' ? 'ИИ' : 'Человек'], ['Герои', state.heroes.map(h => h.name).join(', ')], ['Уровни', state.moments.length], ...Object.entries(state.opts)];
+  if (extraH + extraL) rows.push(['Доплата', (extraH + extraL) + ' × ' + fmt(P.extra)]);
+  $('#summary').innerHTML = rows.map(([a, b]) => `<div class="sum-row"><span>${a}</span><span>${b}</span></div>`).join('');
+  $('#planName').textContent = '«' + p.name + '»';
+  $('#total').textContent = fmt(total);
+  $('#planInfo').textContent = `До ${p.heroes} героев и ${p.levels} уровней, ${p.time}.` + (state.mode === 'human' ? ' Портретное сходство по фото, сюжет пишет сценарист.' : ' Превью бесплатно — платите, если понравится.');
+  $('#go').textContent = state.mode === 'ai' ? 'Создать игру' : 'Заказать у художника';
+  $('#goNote').textContent = state.mode === 'ai' ? 'Сначала бесплатное превью, оплата — потом.' : 'Предоплата 50%, остаток — после превью.';
+}
+
+// превью-сцена
+function titleScreen(ctx, t, withTitle) {
+  PX.drawScene(ctx, 10, t);
+  const hs = state.heroes.slice(0, 4);
+  hs.forEach((h, i) => PX.drawChar(ctx, h, 3, 330 - hs.length * 30 + i * 62, 190 + (i % 2 ? -1 : 1) * Math.round(Math.sin(t / 300))));
+  if (withTitle) {
+    ctx.fillStyle = 'rgba(18,21,14,.72)'; ctx.fillRect(0, 36, 640, 150);
+    ctx.textAlign = 'center'; ctx.fillStyle = '#D4B95E'; ctx.font = '26px "Press Start 2P"';
+    ctx.fillText(gameTitle(), 320, 110);
+    ctx.fillStyle = '#EDE4CF'; ctx.font = '13px "JetBrains Mono"'; ctx.fillText(state.moments.length + ' уровня · ' + state.opts['Длина'], 320, 150);
+    if (Math.floor(t / 600) % 2) { ctx.font = '12px "Press Start 2P"'; ctx.fillText('НАЖМИ СТАРТ', 320, 350); }
+  }
+}
+function gameTitle() { const her = state.heroes.find(h => h.role === 'Кого ищем') || state.heroes[1] || state.heroes[0]; return ('ИГРА ДЛЯ ' + (her ? her.name : '')).toUpperCase(); }
+const pctx = $('#preview').getContext('2d');
+(function loop(t) { if (!$('#builder').hidden) titleScreen(pctx, t || 0, false); requestAnimationFrame(loop); })();
+
+// генерация
+$('#go').onclick = () => {
+  PH.store.set('draft', Object.assign(PH.store.get('draft', {}), { story: state.story }));
+  window.scrollTo(0, 0);
+  $('#builder').hidden = true;
+  if (state.mode === 'human') { $('#human').hidden = false; PH.paint($('#human')); return; }
+  $('#gen').hidden = false; runGen();
+};
+function runGen() {
+  const steps = ['Прочитали вашу историю', 'Нарисовали героев: ' + state.heroes.map(h => h.name).join(', '), ...state.moments.map((m, i) => 'Построили уровень ' + (i + 1) + ': ' + (m[0] || 'без названия')), 'Написали диалоги и записку в финале'];
+  const bar = $('#bar'); bar.innerHTML = '<i></i>'.repeat(20);
+  const gctx = $('#genScene').getContext('2d');
+  let p = 0; const start = performance.now();
+  (function frame(t) {
+    p = Math.min(100, (t - start) / 60);
+    PX.drawScene(gctx, 10, t);
+    const edge = Math.round(640 * p / 100);
+    gctx.fillStyle = 'rgba(18,21,14,.88)'; gctx.fillRect(edge, 0, 640 - edge, 400);
+    gctx.fillStyle = '#3B4630'; for (let x = edge - edge % 20; x < 640; x += 20) gctx.fillRect(x, 0, 2, 400); for (let y = 0; y < 400; y += 20) gctx.fillRect(edge, y, 640 - edge, 2);
+    gctx.fillStyle = '#D4B95E'; gctx.fillRect(edge - 2, 0, 4, 400);
+    $('#pct').textContent = Math.floor(p) + '%';
+    bar.querySelectorAll('i').forEach((el, i) => { el.className = i < Math.floor(p / 5) ? 'on' : (i === Math.floor(p / 5) && p < 100 ? 'cur' : ''); });
+    const done = Math.floor(p / 100 * steps.length);
+    $('#log').innerHTML = steps.map((s, i) => i < done ? `<div class="done"><b>[x]</b> ${s}</div>` : i === done ? `<div class="now"><b>[&gt;]</b> ${s.replace('Построили', 'Строим').replace('Нарисовали', 'Рисуем').replace('Написали', 'Пишем').replace('Добавили', 'Добавляем').replace('Прочитали', 'Читаем')}…</div>` : `<div><b>[ ]</b> ${s}</div>`).join('');
+    if (p < 100) requestAnimationFrame(frame); else setTimeout(showReady, 600);
+  })(start);
+}
+// ---------- сборка игры ----------
+// ВРЕМЕННО: простой шаблон вместо ИИ. На следующем шаге его заменит генерация нейросетью на сервере.
+const THEME_WORDS = [[/гор|медеу|шымбулак|скал|поход/i, 'mountains'], [/озер|река|пруд|лодк/i, 'lake'], [/мор|пляж|океан|берег/i, 'beach'], [/лес|парк|гриб|тропа/i, 'forest'], [/город|улиц|кафе|ресторан|кино|метро/i, 'city'], [/дом|квартир|кухн|комнат/i, 'home'], [/снег|зим|каток|новый год/i, 'snow'], [/ноч|звёзд|звезд|луна/i, 'night']];
+function guessTheme(text, i) { for (const [re, th] of THEME_WORDS) if (re.test(text)) return th; return ['forest', 'city', 'lake', 'mountains'][i % 4]; }
+function buildGame() {
+  const hs = state.heroes.map(h => Object.assign({}, h));
+  const player = hs.find(h => h.role === 'Главный герой') || hs[0];
+  const partner = hs.find(h => h !== player && h.role === 'Кого ищем') || hs.find(h => h !== player) || hs[0];
+  const sentences = state.story.split(/(?<=[.!?…])\s+/).map(x => x.trim()).filter(x => x.length > 8);
+  const moments = state.moments.filter(m => m[0] || m[1]);
+  if (!moments.length) moments.push(['Наша история', 'Где всё началось']);
+  const per = Math.max(2, Math.ceil(sentences.length / moments.length));
+  const levels = moments.map((m, i) => {
+    const mem = sentences.slice(i * per, i * per + per).map(text => ({ text }));
+    if (mem.length < 2) mem.push({ text: m[1] || 'Это место мы запомнили навсегда.' });
+    const last = i === moments.length - 1;
+    return {
+      photo: m[2] ? m[2].pixel : null, photoOriginal: m[2] ? m[2].original : null,
+      title: m[0] || 'Уровень ' + (i + 1), place: m[1] || '', theme: guessTheme(m[0] + ' ' + m[1] + ' ' + mem.map(x => x.text).join(' '), i),
+      intro: [{ who: player.id, text: m[1] ? m[1] + '. Соберу все воспоминания по пути!' : 'Соберу все воспоминания по пути!' }],
+      memories: mem,
+      outro: [{ who: partner.id, text: last ? 'Ты прошёл весь путь… У меня для тебя кое-что есть.' : 'Идём дальше? Впереди ещё столько всего!' }]
+    };
+  });
+  const from = $('#from').value.trim() || player.name;
+  return {
+    version: 1, title: 'Игра для ' + partner.name, subtitle: 'от ' + from + ' · ' + levels.length + ' ур.', from, recipient: partner.name,
+    card: $('#card').value.trim(), mood: state.opts['Атмосфера'], style: state.opts['Стиль'], camera: state.opts['Камера'], genre: state.opts['Жанр'],
+    heroes: hs, player: player.id, partner: partner.id, levels,
+    finale: { title: 'ПИСЬМО ДЛЯ ТЕБЯ', letter: $('#letter').value.trim() || 'Спасибо за каждое воспоминание. Пусть их будет ещё больше.', from },
+    openAt: null, secret: null, createdAt: new Date().toISOString()
+  };
+}
+
+let gameId = null, game = null, testRun = null;
+function showReady() {
+  $('#gen').hidden = true; $('#ready').hidden = false; window.scrollTo(0, 0);
+  const partner = state.heroes.find(h => h.role === 'Кого ищем') || state.heroes[1] || state.heroes[0];
+  const player = state.heroes.find(h => h.role === 'Главный герой') || state.heroes[0];
+  if (!$('#from').value && player.name !== 'Вы') $('#from').value = player.name;
+  if (!$('#card').value) $('#card').value = partner.name + ', это маленькая игра про нас. Пройди её до конца — там тебя кое-что ждёт :)';
+  if (!$('#letter').value) $('#letter').value = partner.name + ', спасибо за каждое воспоминание, которое у нас есть. Пусть их будет ещё тысяча.';
+  gameId = gameId || Math.random().toString(36).slice(2, 10);
+  rebuild();
+}
+function rebuild() {
+  game = buildGame();
+  if (testRun) testRun.stop();
+  testRun = PHGame.start($('#testGame'), game);
+}
+['#from', '#card', '#letter'].forEach(s => $(s).addEventListener('change', rebuild));
+$('#when').addEventListener('pick', e => { $('#openAt').hidden = e.detail !== 'date'; });
+$('#edit').onclick = () => { if (testRun) testRun.stop(); $('#ready').hidden = true; $('#builder').hidden = false; };
+$('#regen').onclick = () => { if (testRun) testRun.stop(); $('#ready').hidden = true; $('#gen').hidden = false; runGen(); };
+$('#publish').onclick = () => {
+  game = buildGame();
+  const when = document.querySelector('#when .tag.on').dataset.v;
+  if (when === 'date' && $('#openAt').value) game.openAt = new Date($('#openAt').value).toISOString();
+  if ($('#sq').value.trim() && $('#sa').value.trim()) game.secret = { question: $('#sq').value.trim(), answer: $('#sa').value.trim() };
+  PH.store.set('game_' + gameId, game);
+  const url = new URL('gift.html?g=' + gameId, location.href).href;
+  $('#link').value = url; $('#share').hidden = false;
+  $('#tg').href = 'https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent('У меня для тебя подарок');
+  $('#wa').href = 'https://wa.me/?text=' + encodeURIComponent('У меня для тебя подарок — открой: ' + url);
+  $('#openGift').href = url;
+  $('#publish').textContent = 'Обновить ссылку';
+};
+$('#copy').onclick = () => { const l = $('#link'); l.select(); (navigator.clipboard ? navigator.clipboard.writeText(l.value) : Promise.resolve(document.execCommand('copy'))).then(() => $('#copy').textContent = 'Готово ✓'); };
+
+renderHeroes(); renderMoments(); setMode(state.mode);
+</script>
+<script>
+/* ===== Режим с сервером: аккаунт, ИИ-генерация, ссылка-подарок для любого устройства =====
+   Если сервер не запущен — работает локальная логика выше. */
+(async () => {
+  if (!(await PHAPI.serverUp())) return;
+  let serverId = params.get('game') || null, poll = null;
+
+  function resync() {
+    $('#story').value = state.story;
+    document.querySelectorAll('#plan .tag').forEach(t => t.classList.toggle('on', t.dataset.v === state.plan));
+    document.querySelectorAll('#opts .opt-group').forEach(g => { const k = g.querySelector('b').textContent; g.querySelectorAll('.tag').forEach(t => t.classList.toggle('on', t.textContent === state.opts[k])); });
+    renderHeroes(); renderMoments(); setMode(state.mode);
+  }
+  const snapshot = () => ({ mode: state.mode, plan: state.plan, story: state.story, heroes: state.heroes, opts: state.opts,
+    moments: state.moments.map(m => [m[0], m[1], m[2] ? { pixel: m[2].pixel, original: null } : undefined]) });
+  const toInput = () => ({ story: state.story, heroes: state.heroes, opts: state.opts, gift: { from: $('#from').value.trim() },
+    moments: state.moments.map(m => ({ title: m[0] || '', desc: m[1] || '', photo: m[2] ? m[2].pixel : undefined, photo_original: m[2] ? m[2].original || undefined : undefined })) });
+
+  // вернулись после входа — восстанавливаем то, что клиент уже заполнил
+  const saved = PH.store.get('builder', null);
+  if (saved && !serverId && !params.get('new')) { Object.assign(state, saved); PH.store.set('builder', null); resync(); }
+
+  function show(id) { ['builder', 'gen', 'ready', 'human'].forEach(x => $('#' + x).hidden = x !== id); window.scrollTo(0, 0); if (id === 'human') PH.paint($('#human')); }
+
+  if (serverId) {
+    try {
+      const g = await PHAPI.api('/api/games/' + serverId), inp = g.input || {};
+      Object.assign(state, { mode: g.mode, plan: g.plan, story: inp.story || '', opts: Object.assign(state.opts, inp.opts || {}),
+        moments: (inp.moments || []).map(m => [m.title, m.desc, m.photo ? { pixel: m.photo, original: null } : undefined]) });
+      // герои: если клиент правил их в конструкторе для этой игры — берём правку, иначе с сервера
+      if (PH.store.get('heroes_game', null) === serverId) state.heroes = PH.heroes();
+      else { state.heroes = inp.heroes || state.heroes; PH.store.set('heroes', state.heroes); PH.store.set('heroes_game', serverId); }
+      resync();
+      if (g.status === 'ready') showServerReady(g);
+      else if (g.status === 'generating') { show('gen'); pollGen(); }
+      else if (g.status.startsWith('human_')) show('human');
+      else if (g.error) $('#goNote').textContent = 'Прошлая попытка: ' + g.error;
+    } catch (e) { serverId = null; history.replaceState(null, '', 'create.html'); }
+  }
+
+  $('#go').onclick = async () => {
+    const me = await PHAPI.me();
+    if (!me) { try { PH.store.set('builder', snapshot()); } catch (e) {} location.href = '/login.html?next=' + encodeURIComponent('/create.html'); return; }
+    const btn = $('#go'); btn.disabled = true;
+    try {
+      const body = { mode: state.mode, plan: state.plan, input: toInput() };
+      const g = serverId ? await PHAPI.api('/api/games/' + serverId, { method: 'PUT', body }) : await PHAPI.api('/api/games', { method: 'POST', body });
+      serverId = g.id; history.replaceState(null, '', 'create.html?game=' + g.id); PH.store.set('heroes_game', g.id);
+      const r = await PHAPI.api('/api/games/' + g.id + '/generate', { method: 'POST' });
+      if (r.status === 'human_queue') { show('human'); return; }
+      show('gen'); pollGen();
+    } catch (e) { alert(e.message); }
+    finally { btn.disabled = false; }
+  };
+  $('#regen').onclick = () => { if (testRun) testRun.stop(); show('builder'); $('#go').click(); };
+
+  function pollGen() {
+    const bar = $('#bar'); bar.innerHTML = '<i></i>'.repeat(20);
+    const gctx = $('#genScene').getContext('2d'); let target = 3, shown = 0, alive = true; const stages = [];
+    (function frame(t) {
+      if (!alive) return;
+      shown += (target - shown) * 0.05; const p = Math.min(100, shown);
+      PX.drawScene(gctx, 10, t);
+      const edge = Math.round(640 * p / 100);
+      gctx.fillStyle = 'rgba(18,21,14,.88)'; gctx.fillRect(edge, 0, 640 - edge, 400);
+      gctx.fillStyle = '#3B4630'; for (let x = edge - edge % 20; x < 640; x += 20) gctx.fillRect(x, 0, 2, 400); for (let y = 0; y < 400; y += 20) gctx.fillRect(edge, y, 640 - edge, 2);
+      gctx.fillStyle = '#D4B95E'; gctx.fillRect(edge - 2, 0, 4, 400);
+      $('#pct').textContent = Math.floor(p) + '%';
+      bar.querySelectorAll('i').forEach((el, i) => { el.className = i < Math.floor(p / 5) ? 'on' : (i === Math.floor(p / 5) && p < 100 ? 'cur' : ''); });
+      requestAnimationFrame(frame);
+    })(performance.now());
+    clearTimeout(poll);
+    const tick = async () => {
+      try {
+        const g = await PHAPI.api('/api/games/' + serverId);
+        target = g.progress;
+        if (g.stage && stages[stages.length - 1] !== g.stage) stages.push(g.stage);
+        $('#log').innerHTML = stages.map((s, i) => i < stages.length - 1 || g.status === 'ready' ? `<div class="done"><b>[x]</b> ${s}</div>` : `<div class="now"><b>[&gt;]</b> ${s}…</div>`).join('');
+        if (g.status === 'ready') { alive = false; setTimeout(() => showServerReady(g), 500); }
+        else if (g.status === 'failed') { alive = false; alert('Не получилось собрать игру: ' + (g.error || 'ошибка') + '\nПопробуйте ещё раз.'); show('builder'); }
+        else poll = setTimeout(tick, 1200);
+      } catch (e) { poll = setTimeout(tick, 3000); }
+    };
+    tick();
+  }
+
+  function showShare(url) {
+    $('#link').value = url; $('#share').hidden = false;
+    $('#tg').href = 'https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent('У меня для тебя подарок');
+    $('#wa').href = 'https://wa.me/?text=' + encodeURIComponent('У меня для тебя подарок — открой: ' + url);
+    $('#openGift').href = url; $('#publish').textContent = 'Обновить подарок';
+    const note = document.querySelector('#share p.muted.small'); if (note) note.textContent = 'Ссылка открывается на любом устройстве. Все ваши игры — в личном кабинете.';
+  }
+  function showServerReady(g) {
+    show('ready');
+    const gift = g.gift || {}, gm = g.game || {}, partner = (gm.heroes || []).find(h => h.id === gm.partner) || {};
+    $('#from').value = gift.from || gm.from || '';
+    $('#card').value = gift.card || gm.card || (partner.name ? partner.name + ', это маленькая игра про нас. Пройди её до конца — там тебя кое-что ждёт :)' : '');
+    $('#letter').value = gift.letter || (gm.finale && gm.finale.letter) || '';
+    if (gift.secret_q) { $('#sq').value = gift.secret_q; $('#sa').placeholder = 'Ответ сохранён — введите новый, чтобы изменить'; }
+    if (gift.open_at) { document.querySelector('#when [data-v=date]').click(); const d = new Date(gift.open_at); $('#openAt').value = new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 16); }
+    game = gm; rebuild();
+    if (g.url) showShare(g.url);
+  }
+  // в режиме сервера тестовый запуск берёт игру от ИИ, а не шаблон
+  rebuild = function () {
+    if (!game) return;
+    game = Object.assign({}, game, { card: $('#card').value.trim(), from: $('#from').value.trim() || game.from });
+    game.finale = Object.assign({}, game.finale, { letter: $('#letter').value.trim() || (game.finale || {}).letter, from: game.from });
+    if (testRun) testRun.stop(); testRun = PHGame.start($('#testGame'), game);
+  };
+  $('#publish').onclick = async () => {
+    const when = document.querySelector('#when .tag.on').dataset.v;
+    const body = { sender: $('#from').value, card: $('#card').value, letter: $('#letter').value, secret_q: $('#sq').value, secret_a: $('#sa').value,
+      open_at: when === 'date' && $('#openAt').value ? new Date($('#openAt').value).toISOString() : null };
+    try { const g = await PHAPI.api('/api/games/' + serverId + '/gift', { method: 'PUT', body }); showShare(g.url); $('#sa').value = ''; if (body.secret_a) $('#sa').placeholder = 'Ответ сохранён — введите новый, чтобы изменить'; }
+    catch (e) { alert(e.message); }
+  };
+})();
+</script>
+</body>
+</html>

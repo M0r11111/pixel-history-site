@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixel History — игра из ваших воспоминаний в подарок</title>
+<meta name="description" content="Опишите общие воспоминания — ИИ за несколько минут сделает 2D пиксельную игру, которую можно подарить близкому человеку.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css?v=7">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="index.html"><canvas data-icon="mushroom"></canvas>PIXEL HISTORY</a>
+    <nav class="nav-links">
+      <a href="#how">Как это работает</a>
+      <a href="#demo">Демо</a>
+      <a href="#characters">Герои</a>
+      <a href="#pricing">Цены</a>
+      <a href="#faq">Вопросы</a>
+    </nav>
+    <a class="btn" href="create.html">Создать</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <span class="chip">▶ ИИ-ГЕНЕРАТОР ПИКСЕЛЬНЫХ ИГР</span>
+    <h1>Ваша история —<span class="yellow">пиксельная игра</span></h1>
+    <p class="lead">Расскажите о воспоминаниях с близким человеком — ИИ за несколько минут превратит их в 2D-игру, которую можно подарить. Без программирования, в один клик.</p>
+
+    <form class="prompt panel hot" id="quick">
+      <div class="row">
+        <span class="kicker">// Ваша история</span>
+        <span class="muted small"><span id="count">0</span> / 2000</span>
+      </div>
+      <textarea class="field" id="story" maxlength="2000" placeholder="Например: мы познакомились с Асем летом 2019 в горах под Алматы. Она потеряла рюкзак, а я весь день помогал его искать…">Мы познакомились с Асем летом 2019 в горах под Алматы. Она потеряла рюкзак, а я весь день помогал его искать. Хочу игру, где мы снова ищем этот рюкзак, а в конце она находит записку от меня…</textarea>
+      <div class="selects">
+        <label class="select"><span>Жанр:</span><select name="genre"><option>Платформер</option><option>РПГ</option><option>Квест</option><option>Головоломка</option><option>Аркада</option></select></label>
+        <label class="select"><span>Камера:</span><select name="camera"><option>Сбоку</option><option>Сверху</option><option>Изометрия</option></select></label>
+        <label class="select"><span>Стиль:</span><select name="style"><option>16-бит</option><option>8-бит</option></select></label>
+        <label class="select"><span>Атмосфера:</span><select name="mood"><option>Уютная</option><option>Романтичная</option><option>Смешная</option><option>Ностальгия</option><option>Загадочная</option></select></label>
+      </div>
+      <div class="row">
+        <span class="muted small">Дальше — соберёте героев в конструкторе и добавите моменты.</span>
+        <button class="btn primary" type="submit">Создать игру</button>
+      </div>
+    </form>
+    <div class="perks"><span>Готово за ~5 минут</span><span>Превью бесплатно</span><span>Ссылка навсегда</span><span>Играть прямо на сайте</span></div>
+  </div>
+</section>
+
+<!-- ЧТО ЭТО -->
+<section class="what">
+  <div class="wrap">
+    <span class="kicker">// Что это такое</span>
+    <h2>Мы делаем <span class="yellow">ИГРУ</span> из ваших общих воспоминаний — в подарок вашему близкому.</h2>
+    <p class="lead">Ваши люди, ваши места, ваши шутки — в пиксельной игре, которую он пройдёт по ссылке на телефоне или ноутбуке. Такой подарок не найти на полке: он собран из вашей жизни.</p>
+    <div class="pillars">
+      <div class="pillar"><canvas data-icon="frog"></canvas><div><b>Ваши люди</b>Вы и близкий — главные герои</div></div>
+      <div class="pillar"><canvas data-icon="fern"></canvas><div><b>Ваши места</b>Уровни там, где вы были вместе</div></div>
+      <div class="pillar"><canvas data-icon="mushroom"></canvas><div><b>Ваши шутки</b>Диалоги и пасхалки только для вас</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ЧТО ПОЛУЧИТЕ -->
+<section class="alt">
+  <div class="wrap split">
+    <div style="display:grid;gap:28px">
+      <span class="kicker">// Что вы получите</span>
+      <h2>Настоящая игра,<br>а не открытка</h2>
+      <ul class="checklist">
+        <li>Герои — вы и близкий человек, собранные в конструкторе</li>
+        <li>Уровни по вашим воспоминаниям</li>
+        <li>Диалоги, секреты и записка в финале</li>
+        <li>Ссылка-подарок: открывается на телефоне и ПК, прямо на сайте</li>
+      </ul>
+    </div>
+    <div class="pixel-frame game">
+      <canvas id="scene" width="640" height="400"></canvas>
+      <div class="hud">
+        <div class="hearts"><canvas data-icon="heart" data-outline></canvas><canvas data-icon="heart" data-outline></canvas><canvas data-icon="heart" data-outline></canvas></div>
+        <div class="score">ВОСПОМИНАНИЯ 3/7</div>
+        <div class="dialog"><b>АСЕМ:</b><span class="typed" id="typed"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ДЕМО -->
+<section id="demo">
+  <div class="wrap demo">
+    <a class="pixel-frame" href="play.html" aria-label="Играть в демо">
+      <canvas id="demoScene" width="640" height="400"></canvas>
+      <span class="badge">СДЕЛАНО НА PIXEL HISTORY</span>
+      <span class="play"><span>▶ ИГРАТЬ</span></span>
+    </a>
+    <div style="display:grid;gap:24px">
+      <span class="kicker">// Демо-игра</span>
+      <h2>Сыграйте в игру,<br>сделанную у нас</h2>
+      <p class="muted">Это настоящая история, превращённая в игру на нашей платформе. Пройдите её за 5 минут — и вы поймёте, что получит ваш близкий.</p>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <a class="btn primary" href="play.html">Играть в демо</a>
+        <a class="btn" href="create.html">Сделать свою</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- КАК ЭТО РАБОТАЕТ -->
+<section id="how" class="alt">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="kicker">// Как это работает</span><h2>Три шага до подарка</h2></div></div>
+    <div class="grid-3">
+      <div class="panel step"><span class="n">01</span><h3>Расскажите историю</h3><p class="muted small">Опишите воспоминание своими словами: где, с кем и что произошло.</p></div>
+      <div class="panel step"><span class="n">02</span><h3>Соберите героев</h3><p class="muted small">В конструкторе: причёска, глаза, одежда. Выберите жанр, камеру и атмосферу.</p></div>
+      <div class="panel step"><span class="n">03</span><h3>Подарите</h3><p class="muted small">Через несколько минут — ссылка-подарок. Близкий откроет её и сыграет прямо на сайте.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- КОНСТРУКТОР ПЕРСОНАЖЕЙ -->
+<section id="characters">
+  <div class="wrap ctor-promo">
+    <div style="display:grid;gap:24px">
+      <span class="kicker">// Конструктор персонажей</span>
+      <h2>Героев собираете вы — не ИИ</h2>
+      <p class="muted">Каждый герой начинается с нейтральной базовой фигуры. Вы сами выбираете цвет кожи, причёску, цвет глаз, одежду и аксессуары. ИИ рисует игру с вашими героями — именно такими, как вы задумали.</p>
+      <div><a class="btn primary" href="character.html">Открыть конструктор</a></div>
+    </div>
+    <div class="ctor-strip">
+      <figure><canvas data-hero="base"></canvas>База</figure>
+      <span class="arrow">▶</span>
+      <figure><canvas data-hero="asem"></canvas>Асем</figure>
+      <figure><canvas data-hero="you"></canvas>Вы</figure>
+    </div>
+  </div>
+</section>
+
+<!-- ПРИМЕРЫ -->
+<section class="alt">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="kicker">// Примеры</span><h2>Истории, ставшие играми</h2></div><a class="btn" href="play.html">Играть в демо</a></div>
+    <div class="grid-3">
+      <article class="card"><canvas class="icon" data-icon="mushroom"></canvas><span class="meta">ПЛАТФОРМЕР · 16-БИТ</span><h3>Грибная тропа</h3><p>Подарок подруге: лесные прогулки, корзина грибов и смешные истории из походов.</p><a href="play.html">Играть →</a></article>
+      <article class="card"><canvas class="icon" data-icon="frog"></canvas><span class="meta">КВЕСТ · СВЕРХУ</span><h3>Принц-лягушонок</h3><p>Игра к годовщине: чтобы найти принцессу, нужно вспомнить все наши свидания.</p><a href="play.html">Играть →</a></article>
+      <article class="card"><canvas class="icon" data-icon="lantern"></canvas><span class="meta">РПГ · ИЗОМЕТРИЯ</span><h3>Фонарь для деда</h3><p>Дедушкины рассказы о деревне превратились в приключение для всей семьи.</p><a href="play.html">Играть →</a></article>
+    </div>
+  </div>
+</section>
+
+<!-- ЦЕНЫ -->
+<section id="pricing">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><span class="kicker">// Цены</span><h2>Дешевле и быстрее,<br>чем у студий</h2></div>
+      <div class="cur" id="cur"><button class="on" data-c="kzt">₸</button><button data-c="rub">₽</button><button data-c="eur">€</button></div>
+    </div>
+    <div class="mode-switch" id="mode">
+      <button class="on" data-m="ai"><b>Делает ИИ</b><span>готово за ~5 минут · дешевле</span></button>
+      <button data-m="human"><b>Делает человек</b><span>художник и сценарист · 3–5 дней</span></button>
+    </div>
+    <div class="free-strip" data-mode="ai">
+      <div><b>ПРЕВЬЮ — БЕСПЛАТНО</b><span class="muted">Создайте игру, пройдите первый уровень и платите, только если понравилось.</span></div>
+      <a class="btn" href="create.html">Попробовать</a>
+    </div>
+    <div class="free-strip human" data-mode="human" hidden>
+      <div><b>РУЧНАЯ РАБОТА</b><span class="muted">Художник рисует героев по вашим фото и конструктору, сценарист пишет сюжет и диалоги. Личный менеджер в чате на сайте.</span></div>
+      <a class="btn" href="create.html?mode=human">Обсудить</a>
+    </div>
+    <div class="grid-3" data-mode="human" hidden>
+      <div class="price">
+        <h3>Мини</h3>
+        <div class="amount" data-kzt="9 990 ₸" data-rub="1 990 ₽" data-eur="20 €">9 990 ₸</div>
+        <ul><li>2 героя по фото</li><li>3 уровня</li><li>1 мини-игра</li><li>Готово за 3 дня</li><li>2 круга правок</li><li>Ссылка навсегда</li></ul>
+        <a class="btn block" href="create.html?mode=human&plan=mini">Заказать</a>
+      </div>
+      <div class="price hit">
+        <span class="hit-badge">ХИТ</span>
+        <h3>Для двоих</h3>
+        <div class="amount" data-kzt="24 990 ₸" data-rub="4 990 ₽" data-eur="50 €">24 990 ₸</div>
+        <ul><li>До 4 героев — портретно по фото</li><li>6 уровней</li><li>3 мини-игры, одна — авторская</li><li>Сюжет и диалоги пишет сценарист</li><li>Готово за 3–5 дней</li><li>3 круга правок</li><li>Ссылка-подарок навсегда</li></ul>
+        <a class="btn primary block" href="create.html?mode=human&plan=duo">Заказать</a>
+      </div>
+      <div class="price">
+        <h3>Компания</h3>
+        <div class="amount" data-kzt="59 990 ₸" data-rub="11 990 ₽" data-eur="120 €">59 990 ₸</div>
+        <ul><li>До 12 героев по фото</li><li>12 уровней</li><li>6 мини-игр, 2 авторские</li><li>Сюжет и финальное письмо</li><li>Готово за 5 дней</li><li>Правки без ограничений</li><li>Общая открытка от всех друзей</li></ul>
+        <a class="btn block" href="create.html?mode=human&plan=crew">Заказать</a>
+      </div>
+    </div>
+    <div class="grid-3" data-mode="ai">
+      <div class="price">
+        <h3>Мини</h3>
+        <div class="amount" data-kzt="4 990 ₸" data-rub="990 ₽" data-eur="10 €">4 990 ₸</div>
+        <ul><li>2 героя</li><li>3 уровня</li><li>1 мини-игра</li><li>Ссылка навсегда</li><li>3 перегенерации</li></ul>
+        <a class="btn block" href="create.html?plan=mini">Выбрать</a>
+      </div>
+      <div class="price hit">
+        <span class="hit-badge">ХИТ</span>
+        <h3>Для двоих</h3>
+        <div class="amount" data-kzt="14 990 ₸" data-rub="2 990 ₽" data-eur="30 €">14 990 ₸</div>
+        <ul><li>До 4 героев</li><li>6 уровней</li><li>3 мини-игры</li><li>Ваша открытка в начале игры</li><li>Дата открытия и секретный вопрос</li><li>Страница-подарок с открыткой</li><li>Правки без ограничений 30 дней</li></ul>
+        <a class="btn primary block" href="create.html?plan=duo">Выбрать</a>
+      </div>
+      <div class="price">
+        <h3>Компания</h3>
+        <div class="amount" data-kzt="29 990 ₸" data-rub="5 990 ₽" data-eur="60 €">29 990 ₸</div>
+        <ul><li>До 12 героев</li><li>12 уровней</li><li>6 мини-игр</li><li>Сюжет и диалоги пишет ИИ</li><li>Можно скинуться компанией</li><li>Общая открытка от всех друзей</li><li>Приоритетная генерация</li></ul>
+        <a class="btn block" href="create.html?plan=crew">Выбрать</a>
+      </div>
+    </div>
+    <div class="addons" data-mode="ai">
+      <span><b>+ уровень или герой</b> — <span data-kzt="990 ₸" data-rub="199 ₽" data-eur="2 €">990 ₸</span></span>
+      <span><b>Передать человеку</b> — можно в любой момент, доплатив разницу</span>
+      <span><b>Срочно</b> — не нужно: игра готова за минуты</span>
+    </div>
+    <div class="addons" data-mode="human" hidden>
+      <span><b>+ уровень или герой</b> — <span data-kzt="3 990 ₸" data-rub="790 ₽" data-eur="8 €">3 990 ₸</span></span>
+      <span><b>Авторская мини-игра</b> — <span data-kzt="7 990 ₸" data-rub="1 590 ₽" data-eur="16 €">7 990 ₸</span></span>
+      <span><b>Срочно за 24 часа</b> — +30%</span>
+    </div>
+  </div>
+</section>
+
+<!-- СРАВНЕНИЕ -->
+<section class="alt">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="kicker">// Почему мы</span><h2>Pixel History vs<br>студии на заказ</h2></div></div>
+    <div style="overflow-x:auto">
+      <table class="compare">
+        <thead><tr><th></th><th>Студии на заказ</th><th class="us">Pixel History</th></tr></thead>
+        <tbody>
+          <tr><td>Срок</td><td class="them">5–7 дней, срочно +30%</td><td class="us">~5 минут</td></tr>
+          <tr><td>Игра для пары</td><td class="them">от 30 000 ₸</td><td class="us">14 990 ₸</td></tr>
+          <tr><td>Превью</td><td class="them">после 100% предоплаты</td><td class="us">бесплатно, до оплаты</td></tr>
+          <tr><td>Правки</td><td class="them">1 бесплатная</td><td class="us">без ограничений 30 дней</td></tr>
+          <tr><td>Ссылка</td><td class="them">1 год, потом платно</td><td class="us">навсегда</td></tr>
+          <tr><td>Внешность героев</td><td class="them">по фото, «не портретно»</td><td class="us">конструктор — как задумали вы</td></tr>
+          <tr><td>Заказ</td><td class="them">анкета → WhatsApp → чек</td><td class="us">всё на сайте, в один клик</td></tr>
+          <tr><td>Ручная работа</td><td class="them">30 000 ₸, 5–7 дней</td><td class="us">24 990 ₸, 3–5 дней</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="kicker">// Вопросы</span><h2>Частые вопросы</h2></div></div>
+    <div class="faq">
+      <details open><summary>Нужно ли уметь программировать?</summary><p>Нет. Вы пишете историю обычными словами, собираете героев в конструкторе и нажимаете «Создать игру». Остальное делает ИИ.</p></details>
+      <details><summary>Чем «Делает ИИ» отличается от «Делает человек»?</summary><p>ИИ собирает игру за несколько минут и стоит дешевле — отлично, если хочется быстро. Человек (художник и сценарист) рисует героев портретно по вашим фото, пишет сюжет и делает авторские мини-игры — дороже и занимает 3–5 дней. Начать с ИИ и потом передать игру человеку можно в любой момент.</p></details>
+      <details><summary>На чём играть получателю?</summary><p>На телефоне, планшете или компьютере — в браузере, без установки и регистрации. На телефоне появляются экранные кнопки.</p></details>
+      <details><summary>Как близкий откроет подарок?</summary><p>По ссылке откроется страница-подарок: коробка с бантом, ваше послание, а затем сама игра — прямо на сайте, без скачивания и регистрации. Можно назначить дату открытия и секретный вопрос.</p></details>
+      <details><summary>Сколько живёт ссылка?</summary><p>Навсегда. Никаких ежегодных продлений.</p></details>
+      <details><summary>А если не понравится?</summary><p>Превью бесплатное — вы платите, только если игра понравилась. После оплаты можно сколько угодно править и пересоздавать уровни 30 дней.</p></details>
+      <details><summary>Что вы делаете с моей историей?</summary><p>История и герои используются только для вашей игры. Игра не попадает в поиск — открыть её можно только по ссылке.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="cta">
+      <div style="display:grid;gap:14px;max-width:720px">
+        <h2>Подарите воспоминания,<br>в которые можно сыграть</h2>
+        <p>День рождения, годовщина, свадьба или просто «спасибо». Превью бесплатно — платите, только если понравится.</p>
+      </div>
+      <a class="btn dark" href="create.html">Создать игру</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span class="px yellow" style="font-size:12px">PIXEL HISTORY</span>
+    <span class="muted">© 2026 Pixel History. Ваши истории — в пикселях.</span>
+    <nav><a href="#">Telegram</a><a href="#">Instagram</a><a href="#">Контакты</a></nav>
+  </div>
+</footer>
+
+<div class="modal" id="demoModal">
+  <div class="panel hot">
+    <canvas data-icon="frog" style="width:80px;background:var(--surface2);padding:8px"></canvas>
+    <h3>Демо скоро здесь</h3>
+    <p class="muted small">Мы собираем демо-игру по настоящей истории. Пока можно сделать свою — превью бесплатно.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+      <a class="btn primary" href="create.html">Сделать свою</a>
+      <button class="btn" data-close>Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/pixel.js?v=7"></script>
+<script src="assets/app.js?v=7"></script>
+<script src="assets/api.js?v=7"></script>
+<script>
+  // сцена с героями и светлячками
+  function loopScene(id, withHeroes) {
+    const c = document.getElementById(id), ctx = c.getContext('2d');
+    (function frame(t) {
+      PX.drawScene(ctx, 10, t || 0);
+      if (withHeroes) {
+        const bob = Math.round(Math.sin((t || 0) / 300)) ;
+        PX.drawChar(ctx, PX.HEROES.you, 3, 300, 190 + bob);
+        PX.drawChar(ctx, PX.HEROES.asem, 3, 360, 190 - bob);
+      }
+      requestAnimationFrame(frame);
+    })();
+  }
+  loopScene('scene', true);
+  loopScene('demoScene', true);
+
+  // печатающийся диалог
+  const lines = ['Ты правда нашёл мой рюкзак?!', 'А что это за записка внутри?..'];
+  let li = 0, ci = 0; const typed = document.getElementById('typed');
+  setInterval(() => {
+    const s = lines[li];
+    if (ci <= s.length) { typed.textContent = s.slice(0, ci++); }
+    else if (ci++ > s.length + 25) { li = (li + 1) % lines.length; ci = 0; }
+  }, 60);
+
+  // счётчик символов и быстрый старт
+  const story = document.getElementById('story'), count = document.getElementById('count');
+  const upd = () => count.textContent = story.value.length; story.addEventListener('input', upd); upd();
+  document.getElementById('quick').addEventListener('submit', e => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    PH.store.set('draft', { story: story.value, genre: f.get('genre'), camera: f.get('camera'), style: f.get('style'), mood: f.get('mood') });
+    location.href = 'create.html';
+  });
+
+  // ИИ / человек
+  document.getElementById('mode').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    document.querySelectorAll('#mode button').forEach(x => x.classList.toggle('on', x === b));
+    document.querySelectorAll('[data-mode]').forEach(el => el.hidden = el.dataset.mode !== b.dataset.m);
+  });
+
+  // переключатель валюты
+  document.getElementById('cur').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    document.querySelectorAll('#cur button').forEach(x => x.classList.toggle('on', x === b));
+    document.querySelectorAll('[data-' + b.dataset.c + ']').forEach(el => el.textContent = el.dataset[b.dataset.c]);
+  });
+</script>
+</body>
+</html>
