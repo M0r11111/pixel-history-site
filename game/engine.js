@@ -395,6 +395,13 @@ function PHEngineFactory(global) {
   const box = (ctx, x, y, w, h, fill, line) => { P(ctx, line || '#EDE4CF', x - 4, y - 4, w + 8, h + 8); P(ctx, fill || '#12121C', x, y, w, h); };
   const txt = (ctx, s, x, y, size, color, font, align) => { ctx.fillStyle = color; ctx.font = size + 'px ' + (font || MONO); ctx.textAlign = align || 'left'; ctx.textBaseline = 'top'; ctx.fillText(s, x, y); };
   function wrapLines(ctx, s, w, size) { ctx.font = size + 'px ' + MONO; return wrap(ctx, s, w); }
+  const IS_TOUCH = typeof matchMedia !== 'undefined' && matchMedia('(hover:none),(pointer:coarse)').matches;
+  const HAND = ['...##...', '...##...', '...####.', '.#######', '########', '.#######', '..######', '...####.'];
+  const RUNNER = ['....##..', '....##..', '..####..', '.#.##.#.', '...##...', '..#..#..', '.#....#.', '#......#'];
+  function pxIcon(ctx, pat, x, y, s, c) { ctx.fillStyle = c; pat.forEach((row, j) => [...row].forEach((ch, i) => { if (ch === '#') ctx.fillRect(Math.round(x + i * s), Math.round(y + j * s), s, s); })); }
+  const svgIcon = (pat, c) => '<svg viewBox="0 0 8 8" width="26" height="26" shape-rendering="crispEdges" aria-hidden="true">' + pat.map((row, j) => [...row].map((ch, i) => ch === '#' ? `<rect x="${i}" y="${j}" width="1" height="1" fill="${c}"/>` : '').join('')).join('') + '</svg>';
+  // кнопка «действие»: на компьютере — клавиша E, на телефоне — иконка руки (как на экранной кнопке)
+  function actGlyph(ctx, cx, y, color) { if (IS_TOUCH) pxIcon(ctx, HAND, cx - 8, y - 3, 2, color); else txt(ctx, 'E', cx, y, 10, color, FONT, 'center'); }
   const inRect = (p, x, y, w, h) => p && p.x >= x && p.x <= x + w && p.y >= y && p.y <= y + h;
 
   // общий выбор из вариантов (используют chat, choice, quiz)
@@ -538,7 +545,7 @@ function PHEngineFactory(global) {
   };
 
   // 6) Влог на экшен-камеру: повтори кнопку — герои кривляются
-  const POSE_KEYS = [['left', '◀', 'wave'], ['right', '▶', 'dance'], ['act', 'A', 'joy']];
+  const POSE_KEYS = [['left', '◀', 'wave'], ['right', '▶', 'dance'], ['act', 'E', 'joy']];
   MG.poses = {
     init(m) { m.k = 0; m.score = 0; m.need = 0; m.anim = null; m.animT = 0; m.rnd = rng(5); m.need = Math.floor(m.rnd() * 3); m.msg = ''; },
     update(m, inp) {
@@ -560,7 +567,7 @@ function PHEngineFactory(global) {
       PX.drawAnim(ctx, an, api.player, null, api.t, 3, 272, 232);
       PX.drawAnim(ctx, an, api.partner, null, api.t + 300, 3, 368, 232, { flip: true });
       if (m.msg) txt(ctx, m.msg, W / 2, 250, 13, '#F4C430', MONO, 'center');
-      for (let i = 0; i < 3; i++) { const on = i === m.need && m.animT <= 0; P(ctx, on ? '#F4C430' : '#2E2E46', 200 + i * 90, 300, 70, 46); txt(ctx, POSE_KEYS[i][1], 235 + i * 90, 314, 16, on ? '#12121C' : '#A8B2C1', FONT, 'center'); }
+      for (let i = 0; i < 3; i++) { const on = i === m.need && m.animT <= 0; P(ctx, on ? '#F4C430' : '#2E2E46', 200 + i * 90, 300, 70, 46); if (i === 2) actGlyph(ctx, 235 + i * 90, 318, on ? '#12121C' : '#A8B2C1'); else txt(ctx, POSE_KEYS[i][1], 235 + i * 90, 314, 16, on ? '#12121C' : '#A8B2C1', FONT, 'center'); }
       txt(ctx, 'Жми подсвеченную кнопку', W / 2, 284, 11, '#EDE4CF', MONO, 'center');
     }
   };
@@ -643,13 +650,17 @@ function PHEngineFactory(global) {
     function worldEnd() { if (eight) { mainCtx.imageSmoothingEnabled = false; mainCtx.drawImage(off, 0, 0, W, H); } ctx = mainCtx; }
     chapters.forEach(L => { if (L.photo) { const im = new Image(); im.src = L.photo; L._img = im; } });
     const ui = document.createElement('div'); ui.className = 'phg-ui';
-    ui.innerHTML = '<div class="phg-touch"><div class="phg-pad"><button data-k="left">◀</button><button data-k="right">▶</button></div><div class="phg-ab"><button data-k="act">A</button></div></div>';
+    ui.innerHTML = '<button class="phg-x" type="button" aria-label="Выйти из полноэкранного режима">✕</button>'
+      + '<button class="phg-start" type="button"><span>▶ ИГРАТЬ</span><small>откроется на весь экран</small></button>'
+      + '<div class="phg-touch"><div class="phg-pad"><button data-k="left" aria-label="Влево">◀</button><button data-k="right" aria-label="Вправо">▶</button></div>'
+      + '<div class="phg-ab"><button data-k="run" aria-label="Бег">' + svgIcon(RUNNER, '#F1FAEE') + '<small>БЕГ</small></button>'
+      + '<button data-k="act" aria-label="Действие">' + svgIcon(HAND, '#12121C') + '<small>ДЕЙСТВИЕ</small></button></div></div>';
     container.appendChild(ui);
 
     // ---- ввод: ← → идти, A / E / пробел / Enter — действие; тап по экрану — выбор в мини-играх
-    const keys = { left: false, right: false, act: false }, edge = { left: false, right: false, act: false };
+    const keys = { left: false, right: false, act: false, run: false }, edge = { left: false, right: false, act: false, run: false };
     let tap = null, tapX = null;
-    const map = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', Space: 'act', Enter: 'act', KeyE: 'act', KeyZ: 'act', KeyX: 'act', ArrowUp: 'act', KeyW: 'act' };
+    const map = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', Space: 'act', Enter: 'act', KeyE: 'act', KeyZ: 'act', KeyX: 'act', ArrowUp: 'act', KeyW: 'act', ShiftLeft: 'run', ShiftRight: 'run' };
     function press(k, v) { if (v && !keys[k]) edge[k] = true; keys[k] = v; }
     const typing = e => e.target && (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable);
     const kd = e => { if (typing(e)) return; const k = map[e.code]; if (k) { e.preventDefault(); press(k, true); } };
@@ -660,8 +671,45 @@ function PHEngineFactory(global) {
       b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); b.setPointerCapture(e.pointerId); press(k, true); });
       ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => b.addEventListener(ev, () => press(k, false)));
     });
-    const toCanvas = e => { const r = canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height }; };
-    canvas.addEventListener('pointerdown', e => { const p = toCanvas(e); tap = p; tapX = p.x; });
+    const toCanvas = e => {
+      const r = canvas.getBoundingClientRect();
+      if (container.classList.contains('rot')) return { x: (e.clientY - r.top) * W / r.height, y: (r.right - e.clientX) * H / r.width };   // экран повёрнут на 90°
+      return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+    };
+
+    // ---- телефон: игра на весь экран и сразу горизонтально ----
+    let full = false;
+    function layout() {
+      if (!full) { canvas.style.width = canvas.style.height = ''; container.classList.remove('rot'); return; }
+      const rot = innerHeight > innerWidth;           // телефон держат вертикально и повернуть экран нельзя — поворачиваем игру сами
+      container.classList.toggle('rot', rot);
+      const w = rot ? innerHeight : innerWidth, h = rot ? innerWidth : innerHeight, cw = Math.min(w, h * 16 / 9);
+      canvas.style.width = Math.floor(cw) + 'px'; canvas.style.height = Math.floor(cw * 9 / 16) + 'px';
+    }
+    function enterFull() {
+      if (full) return;
+      full = true; container.classList.add('full'); document.documentElement.classList.add('phg-lock');
+      const fs = container.requestFullscreen || container.webkitRequestFullscreen;
+      try {
+        const pr = fs && fs.call(container, { navigationUI: 'hide' });
+        const lock = () => { try { const o = screen.orientation; if (o && o.lock) o.lock('landscape').then(layout, () => {}); } catch (e) { } };
+        if (pr && pr.then) pr.then(lock, () => {}); else lock();
+      } catch (e) { }
+      layout(); setTimeout(layout, 300);
+    }
+    function exitFull() {
+      if (!full) return;
+      full = false; container.classList.remove('full', 'rot'); document.documentElement.classList.remove('phg-lock');
+      try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen(); if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) { }
+      layout();
+    }
+    const onFs = () => { if (!document.fullscreenElement && !document.webkitFullscreenElement && full) exitFull(); };
+    const onResize = () => { layout(); setTimeout(layout, 250); };
+    addEventListener('resize', onResize); addEventListener('orientationchange', onResize);
+    document.addEventListener('fullscreenchange', onFs); document.addEventListener('webkitfullscreenchange', onFs);
+    ui.querySelector('.phg-start').addEventListener('click', e => { e.preventDefault(); enterFull(); });
+    ui.querySelector('.phg-x').addEventListener('click', e => { e.preventDefault(); exitFull(); });
+    canvas.addEventListener('pointerdown', e => { if (IS_TOUCH && !full) { enterFull(); return; } const p = toCanvas(e); tap = p; tapX = p.x; });
     canvas.addEventListener('pointermove', e => { if (e.buttons) tapX = toCanvas(e).x; });
     canvas.addEventListener('pointerup', () => { tapX = null; });
 
@@ -730,18 +778,18 @@ function PHEngineFactory(global) {
 
       // актёры
       Object.values(actors).forEach(a => {
-        if (a.mode === 'follow') { const tx = pl.x - (pl.flip ? -54 : 54); if (Math.abs(a.x - tx) > 6) { a.x += Math.sign(tx - a.x) * 2.6; a.flip = tx < a.x; a.moving = true; } else { a.moving = false; a.flip = pl.flip; } }
+        if (a.mode === 'follow') { const tx = pl.x - (pl.flip ? -54 : 54); if (Math.abs(a.x - tx) > 6) { a.x += Math.sign(tx - a.x) * Math.min(Math.abs(tx - a.x), (pl.sp || 2.6) + .4); a.flip = tx < a.x; a.moving = true; } else { a.moving = false; a.flip = pl.flip; } }
         else if (a.to != null) { const sp = a.mode === 'run' ? 6 : 2.6; if (Math.abs(a.x - a.to) > sp) { a.x += Math.sign(a.to - a.x) * sp; a.flip = a.to < a.x; a.moving = true; } else { a.x = a.to; a.to = null; a.moving = false; if (a.waitStep) { a.waitStep = false; runStep(); } } }
       });
       if (Object.values(actors).some(a => a.waitStep)) return;   // ждём, пока актёр дойдёт
 
       // ходьба
-      const sp = 2.6;
+      const sp = keys.run ? 4.6 : 2.6; pl.sp = sp;
       pl.moving = false;
       if (keys.left || (tapX != null && tapX + cam < pl.x - 10 && !goalTapped(inp))) { pl.x -= sp; pl.flip = true; pl.moving = true; }
       else if (keys.right || (tapX != null && tapX + cam > pl.x + 10 && !goalTapped(inp))) { pl.x += sp; pl.flip = false; pl.moving = true; }
       pl.x = clamp(pl.x, 30, ch.width - 30);
-      if (pl.moving) pl.walk += sp;
+      if (pl.moving) pl.walk += sp; pl.running = pl.moving && keys.run;
 
       // цель
       if (goal) {
@@ -833,7 +881,7 @@ function PHEngineFactory(global) {
       Object.values(actors).forEach(drawActor);
       // игрок: стоит — лицом к нам, идёт — профиль выбранной походкой
       const px = pl.x - cam;
-      if (pl.moving) PX.drawPose(ctx, playerHero, 2, Math.round(px - PX.CX * 2), GROUND - PX.FOOT * 2, 'side', PX.animFrame(playerHero.walk || 'walk_normal', pl.walk * 18), pl.flip);
+      if (pl.moving) PX.drawPose(ctx, playerHero, 2, Math.round(px - PX.CX * 2), GROUND - PX.FOOT * 2, 'side', PX.animFrame(pl.running ? 'walk_run' : (playerHero.walk || 'walk_normal'), pl.walk * 18), pl.flip);
       else PX.drawAnim(ctx, 'idle', playerHero, null, t, 2, px, GROUND, { flip: pl.flip });
       if (th.fireflies) for (let i = 0; i < 10; i++) { if (Math.sin(t / 400 + i * 2) > 0) P(ctx, '#F2E3A0', (i * 113 - cam * 0.6 % W + W * 2) % W, 60 + (i * 47) % 160 + Math.sin(t / 600 + i) * 6, 3, 3); }
       if (th.snowfall) for (let i = 0; i < 40; i++) P(ctx, '#FFFFFF', (i * 71 + t / 30 * (1 + i % 3)) % W, (i * 43 + t / 12) % H, 3, 3);
@@ -844,7 +892,7 @@ function PHEngineFactory(global) {
         const tx = (goal.toX != null ? goal.toX : tg ? tg.x : null);
         if (tx != null) {
           const sx = tx - cam, bob = Math.round(Math.sin(t / 200) * 3);
-          if (sx > 10 && sx < W - 10) { if (goal.at && Math.abs(pl.x - tx) < 48) { P(ctx, '#12121C', sx - 14, GROUND - 112 + bob, 28, 24); P(ctx, '#F4C430', sx - 12, GROUND - 110 + bob, 24, 20); centerTextAt('A', sx, GROUND - 106 + bob, 10, '#12121C'); } else { P(ctx, '#F4C430', sx - 4, GROUND - 106 + bob, 8, 8); P(ctx, '#F4C430', sx - 2, GROUND - 98 + bob, 4, 4); } }
+          if (sx > 10 && sx < W - 10) { if (goal.at && Math.abs(pl.x - tx) < 48) { P(ctx, '#12121C', sx - 14, GROUND - 112 + bob, 28, 24); P(ctx, '#F4C430', sx - 12, GROUND - 110 + bob, 24, 20); actGlyph(ctx, sx, GROUND - 106 + bob, '#12121C'); } else { P(ctx, '#F4C430', sx - 4, GROUND - 106 + bob, 8, 8); P(ctx, '#F4C430', sx - 2, GROUND - 98 + bob, 4, 4); } }
           else { const right = sx >= W - 10; P(ctx, '#F4C430', right ? W - 22 : 10, GROUND - 120, 12, 12); centerTextAt(right ? '▶' : '◀', right ? W - 16 : 16, GROUND - 118, 8, '#12121C'); }
         }
       }
@@ -883,7 +931,7 @@ function PHEngineFactory(global) {
       goto(i) { dlg = null; mg = null; loadChapter(Math.max(0, Math.min(chapters.length - 1, i))); },
       skipMini() { if (mg) mg.done = true; },   // для проверки и админки
       player() { return { x: pl.x, target: goal && (goal.toX != null ? goal.toX : (findTarget(goal.at || goal.near) || {}).x), near: goal && !!goal.near } },
-      stop() { alive = false; cancelAnimationFrame(raf); removeEventListener('keydown', kd); removeEventListener('keyup', ku); }
+      stop() { alive = false; cancelAnimationFrame(raf); exitFull(); removeEventListener('keydown', kd); removeEventListener('keyup', ku); removeEventListener('resize', onResize); removeEventListener('orientationchange', onResize); document.removeEventListener('fullscreenchange', onFs); document.removeEventListener('webkitfullscreenchange', onFs); }
     };
   }
 
@@ -891,13 +939,23 @@ function PHEngineFactory(global) {
   /* стили интерфейса игры (кнопки, масштаб) */
   const css = `.phg{position:relative;width:100%;aspect-ratio:16/9;background:#12121C;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
 .phg canvas{width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
-.phg-ui button{font:12px "Press Start 2P",monospace;color:#EDE4CF;background:rgba(16,16,26,.65);border:3px solid #EDE4CF;cursor:pointer}
-.phg-mute{position:absolute;top:10px;right:10px;width:36px;height:36px;font-size:14px!important}
-.phg-touch{display:none;position:absolute;left:0;right:0;bottom:10px;padding:0 12px;justify-content:space-between;pointer-events:none}
-.phg-touch button{pointer-events:auto;width:58px;height:58px;font-size:16px!important;opacity:.85}
-.phg-pad,.phg-ab{display:flex;gap:10px}.phg-ab button[data-k=jump]{background:rgba(192,89,58,.8)}.phg-ab button[data-k=act]{background:rgba(212,185,94,.75);color:#12121C}
-@media (hover:none),(pointer:coarse){.phg-touch{display:flex}}
-@media (orientation:portrait) and (pointer:coarse){.phg{aspect-ratio:auto;overflow:visible;background:#1E1E2E}.phg canvas{height:auto;aspect-ratio:16/9}.phg-touch{position:static;padding:22px 16px 18px}.phg-touch button{width:74px;height:74px;opacity:1}}`;
+.phg-ui button{font:12px "Press Start 2P",monospace;color:#F1FAEE;background:rgba(16,16,26,.6);border:3px solid #F1FAEE;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.phg-x,.phg-start,.phg-touch{display:none}
+.phg-start{position:absolute;inset:0;margin:auto;width:min(260px,70%);height:86px;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:#E63946!important;border-color:#0A0A10!important;box-shadow:6px 6px 0 #3D7DD8}
+.phg-start span{font-size:14px}.phg-start small{font:11px "JetBrains Mono",monospace;opacity:.9}
+.phg-touch{position:absolute;left:0;right:0;bottom:max(12px,env(safe-area-inset-bottom));padding:0 max(16px,env(safe-area-inset-left));justify-content:space-between;align-items:flex-end;pointer-events:none}
+.phg-touch button{pointer-events:auto;width:66px;height:66px;font-size:18px;opacity:.85;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;touch-action:none}
+.phg-touch button small{font-size:6px;letter-spacing:.02em}
+.phg-pad,.phg-ab{display:flex;gap:12px;align-items:flex-end}
+.phg-ab button[data-k=act]{background:rgba(244,196,48,.85);border-color:#0A0A10;color:#12121C;width:76px;height:76px}
+.phg-ab button[data-k=run]{background:rgba(61,125,216,.75)}
+.phg-x{position:absolute;top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));width:42px;height:42px;font-size:14px;z-index:3}
+@media (hover:none),(pointer:coarse){.phg:not(.full) .phg-start{display:flex}.phg.full .phg-touch{display:flex}.phg.full .phg-x{display:block}}
+.phg.full{position:fixed;left:0;top:0;width:100vw;height:100vh;height:100dvh;aspect-ratio:auto;z-index:10000;background:#000;display:flex;align-items:center;justify-content:center}
+.phg.full.rot{width:100vh;height:100vw;width:100dvh;height:100dvw;left:100vw;transform-origin:0 0;transform:rotate(90deg)}
+.phg.full canvas{flex:none}
+.phg.full,.phg.full.pixel-frame{border:0!important;box-shadow:none!important;margin:0!important;max-width:none!important}
+html.phg-lock,html.phg-lock body{overflow:hidden;overscroll-behavior:none}`;
   if (typeof document !== 'undefined' && !document.getElementById('phg-css')) { const st = document.createElement('style'); st.id = 'phg-css'; st.textContent = css; document.head.appendChild(st); }
 
   // Нарисовать сцену локации без игры (превью на сайте): фон + декор + земля
