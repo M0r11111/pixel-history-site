@@ -7,7 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=13">
+<link rel="stylesheet" href="assets/style.css?v=14">
+<link id="site-theme" rel="stylesheet" href="assets/themes/retro.css?v=2">
 </head>
 <body>
 <header class="nav">
@@ -129,6 +130,10 @@
         <div class="tags" data-single id="when"><span class="tag on" data-v="now">Сразу</span><span class="tag" data-v="date">В дату</span></div>
         <input class="field" type="datetime-local" id="openAt" hidden style="padding:12px">
       </div>
+      <div class="opt-group"><b>Оформление страницы-подарка</b>
+        <div class="tags" data-single id="giftTheme"></div>
+        <a class="small yellow" id="themePreview" href="#" target="_blank" rel="noopener">Посмотреть, как увидит получатель →</a>
+      </div>
       <div class="opt-group"><b>Секретный вопрос (необязательно)</b>
         <input class="field" id="sq" placeholder="Где мы познакомились?" style="padding:12px">
         <input class="field" id="sa" placeholder="Ответ" style="padding:12px">
@@ -164,10 +169,10 @@
 
 <div class="modal" id="soon"><div class="panel hot"><h3>Скоро</h3><p class="muted small">Это прототип сайта — эта кнопка заработает, когда подключим генерацию игр.</p><button class="btn" data-close>Понятно</button></div></div>
 
-<script src="assets/pixel.js?v=13"></script>
-<script src="assets/app.js?v=13"></script>
-<script src="assets/api.js?v=13"></script>
-<script src="game/engine.js?v=13"></script>
+<script src="assets/pixel.js?v=14"></script>
+<script src="assets/app.js?v=14"></script>
+<script src="assets/api.js?v=14"></script>
+<script src="game/engine.js?v=14"></script>
 <script>
 const $ = s => document.querySelector(s);
 const PLANS = {
@@ -391,6 +396,7 @@ $('#publish').onclick = () => {
   const when = document.querySelector('#when .tag.on').dataset.v;
   if (when === 'date' && $('#openAt').value) game.openAt = new Date($('#openAt').value).toISOString();
   if ($('#sq').value.trim() && $('#sa').value.trim()) game.secret = { question: $('#sq').value.trim(), answer: $('#sa').value.trim() };
+  game.giftTheme = giftTheme;
   PH.store.set('game_' + gameId, game);
   const url = new URL('gift.html?g=' + gameId, location.href).href;
   $('#link').value = url; $('#share').hidden = false;
@@ -400,6 +406,19 @@ $('#publish').onclick = () => {
   $('#publish').textContent = 'Обновить ссылку';
 };
 $('#copy').onclick = () => { const l = $('#link'); l.select(); (navigator.clipboard ? navigator.clipboard.writeText(l.value) : Promise.resolve(document.execCommand('copy'))).then(() => $('#copy').textContent = 'Готово ✓'); };
+
+// оформление страницы-подарка: клиент выбирает тему, получатель увидит подарок в ней
+let giftTheme = 'retro';
+function setGiftTheme(v) { giftTheme = PH.THEMES[v] ? v : 'retro'; document.querySelectorAll('#giftTheme .tag').forEach(t => t.classList.toggle('on', t.dataset.v === giftTheme)); }
+$('#giftTheme').innerHTML = Object.entries(PH.THEMES).map(([id, t]) => `<span class="tag" data-v="${id}"><i class="sw">${t.swatch.map(c => `<b style="background:${c}"></b>`).join('')}</i>${t.name}</span>`).join('');
+$('#giftTheme').addEventListener('click', e => { const t = e.target.closest('.tag'); if (t) setGiftTheme(t.dataset.v); });
+setGiftTheme('retro');
+$('#themePreview').addEventListener('click', e => {
+  e.preventDefault();
+  if (!game) return;
+  PH.store.set('game_preview', Object.assign({}, game, { card: $('#card').value, from: $('#from').value || game.from, giftTheme, openAt: null, secret: null }));
+  window.open('gift.html?g=preview&theme=' + giftTheme, '_blank', 'noopener');
+});
 
 renderHeroes(); renderMoments(); setMode(state.mode);
 </script>
@@ -502,6 +521,7 @@ renderHeroes(); renderMoments(); setMode(state.mode);
     $('#from').value = gift.from || gm.from || '';
     $('#card').value = gift.card || gm.card || (partner.name ? partner.name + ', это маленькая игра про нас. Пройди её до конца — там тебя кое-что ждёт :)' : '');
     $('#letter').value = gift.letter || (gm.finale && gm.finale.letter) || '';
+    setGiftTheme(gift.theme || 'retro');
     if (gift.secret_q) { $('#sq').value = gift.secret_q; $('#sa').placeholder = 'Ответ сохранён — введите новый, чтобы изменить'; }
     if (gift.open_at) { document.querySelector('#when [data-v=date]').click(); const d = new Date(gift.open_at); $('#openAt').value = new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 16); }
     game = gm; rebuild();
@@ -516,7 +536,7 @@ renderHeroes(); renderMoments(); setMode(state.mode);
   };
   $('#publish').onclick = async () => {
     const when = document.querySelector('#when .tag.on').dataset.v;
-    const body = { sender: $('#from').value, card: $('#card').value, letter: $('#letter').value, secret_q: $('#sq').value, secret_a: $('#sa').value,
+    const body = { sender: $('#from').value, card: $('#card').value, letter: $('#letter').value, secret_q: $('#sq').value, secret_a: $('#sa').value, theme: giftTheme,
       open_at: when === 'date' && $('#openAt').value ? new Date($('#openAt').value).toISOString() : null };
     try { const g = await PHAPI.api('/api/games/' + serverId + '/gift', { method: 'PUT', body }); showShare(g.url); $('#sa').value = ''; if (body.secret_a) $('#sa').placeholder = 'Ответ сохранён — введите новый, чтобы изменить'; }
     catch (e) { alert(e.message); }

@@ -356,3 +356,7 @@ footer nav { display: flex; gap: 24px; }
 .theme-switch { position: fixed; left: max(12px, env(safe-area-inset-left, 0px)); bottom: max(12px, env(safe-area-inset-bottom, 0px)); z-index: 80; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; max-width: calc(100% - 24px); background: var(--ink); color: var(--text); border: 3px solid var(--yellow); padding: 8px 10px; font-size: 12px; box-shadow: 4px 4px 0 var(--rust); }
 .theme-switch button { font: 700 11px var(--mono); background: transparent; color: var(--text); border: 2px solid var(--surface2); padding: 5px 8px; cursor: pointer; }
 .theme-switch button.on { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
+
+/* образцы цветов темы в выборе оформления */
+.tag .sw { display: inline-flex; margin-right: 6px; vertical-align: -2px; border: 1px solid var(--ink); }
+.tag .sw b { display: block; width: 8px; height: 12px; }

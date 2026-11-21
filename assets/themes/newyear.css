@@ -1,0 +1,22 @@
+/* Тема страницы-подарка «Новый год»: зимняя ночь, золото и красный, падающий снег (снег — см. gift.html). */
+:root {
+  --bg: #0E2433;
+  --surface: #143246;
+  --surface2: #22506B;
+  --yellow: #E8C547;
+  --rust: #D7263D;
+  --moss: #6CCFA0;
+  --text: #F4FAFF;
+  --muted: #A9C4D6;
+  --ink: #081620;
+}
+body {
+  background: linear-gradient(180deg, #0B1D2A 0%, #0E2433 60%, #163A4F 100%) fixed;
+}
+.btn.primary { color: #081620; background: var(--yellow); border-color: var(--ink); box-shadow: 6px 6px 0 var(--rust); }
+.btn.primary:hover { background: #F2D35F; }
+.kicker { color: var(--rust); }
+.yellow { color: var(--yellow); }
+#play { background: #081620; }
+#play .holder > div { border-color: var(--yellow); }
+.count div { border-color: var(--surface2); }

@@ -9,7 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=13">
+<link rel="stylesheet" href="assets/style.css?v=14">
+<link id="site-theme" rel="stylesheet" href="assets/themes/retro.css?v=2">
 <style>
   body { min-height: 100vh; min-height: 100dvh; overflow-x: hidden; }
   .scr { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 32px 20px; text-align: center; position: relative; }
@@ -20,6 +21,7 @@
   @keyframes wobble { 0%, 80%, 100% { transform: rotate(0); } 84% { transform: rotate(-6deg); } 88% { transform: rotate(6deg); } 92% { transform: rotate(-4deg); } 96% { transform: rotate(3deg); } }
   @keyframes openbox { to { transform: translateY(-30px) scale(1.4); opacity: 0; } }
   .big { font-family: var(--pixel); font-size: clamp(18px, 5.5vw, 26px); line-height: 1.6; }
+  #fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
   .spark { position: absolute; width: 12px; height: 12px; background:
     linear-gradient(#F2E3A0, #F2E3A0) center / 4px 12px no-repeat, linear-gradient(#F2E3A0, #F2E3A0) center / 12px 4px no-repeat; animation: tw 1.6s steps(2) infinite; }
   @keyframes tw { 50% { opacity: .2; } }
@@ -38,6 +40,7 @@
 </style>
 </head>
 <body>
+<canvas id="fx" aria-hidden="true"></canvas>
 
 <!-- 1. ещё рано -->
 <section class="scr" id="locked" hidden>
@@ -91,14 +94,41 @@
   </div>
 </section>
 
-<script src="assets/pixel.js?v=13"></script>
-<script src="assets/app.js?v=13"></script>
-<script src="game/engine.js?v=13"></script>
-<script src="games/demo.js?v=13"></script>
-<script src="assets/api.js?v=13"></script>
+<script src="assets/pixel.js?v=14"></script>
+<script src="assets/app.js?v=14"></script>
+<script src="game/engine.js?v=14"></script>
+<script src="games/demo.js?v=14"></script>
+<script src="assets/api.js?v=14"></script>
 <script>
 const $ = s => document.querySelector(s);
 const q = new URLSearchParams(location.search);
+
+/* ---------- оформление страницы-подарка (выбирает клиент) ---------- */
+let fxRun = 0;
+function setGiftTheme(name) {
+  if (!PH.THEMES[name]) name = 'retro';
+  PH.applyTheme(name);
+  const c = document.getElementById('fx'), x = c.getContext('2d'), run = ++fxRun;
+  const kind = name === 'birthday' ? 'confetti' : name === 'newyear' ? 'snow' : name === 'cozy' ? 'stars' : null;
+  const fit = () => { c.width = innerWidth; c.height = innerHeight; }; fit(); addEventListener('resize', fit);
+  x.clearRect(0, 0, c.width, c.height);
+  if (!kind || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cols = { confetti: ['#FF4D8D', '#3DB2FF', '#FFC400', '#22B07D', '#9B5DE5'], snow: ['#FFFFFF', '#DCEBF5'], stars: ['#FFF4E0', '#FFC857'] }[kind];
+  const ps = Array.from({ length: kind === 'stars' ? 40 : 70 }, (_, i) => ({ x: Math.random() * c.width, y: Math.random() * c.height, v: 0.6 + Math.random() * 1.6, s: kind === 'snow' ? 2 + Math.random() * 3 : 4 + Math.random() * 4, ph: Math.random() * 6, c: cols[i % cols.length] }));
+  (function frame(t) {
+    if (run !== fxRun) return;
+    x.clearRect(0, 0, c.width, c.height);
+    ps.forEach(p => {
+      if (kind === 'stars') { if (Math.sin(t / 600 + p.ph) > 0.2) { x.fillStyle = p.c; x.fillRect(p.x | 0, p.y | 0, 3, 3); } return; }
+      p.y += p.v; p.x += Math.sin(t / 700 + p.ph) * (kind === 'snow' ? 0.4 : 0.8);
+      if (p.y > c.height + 10) { p.y = -10; p.x = Math.random() * c.width; }
+      x.fillStyle = p.c;
+      if (kind === 'confetti') x.fillRect(p.x | 0, p.y | 0, p.s, Math.max(2, (p.s * Math.abs(Math.sin(t / 300 + p.ph))) | 0));
+      else x.fillRect(p.x | 0, p.y | 0, p.s | 0, p.s | 0);
+    });
+    requestAnimationFrame(frame);
+  })(0);
+}
 const slug = (location.pathname.match(/\/g\/([A-Za-z0-9]+)/) || [])[1];   // ссылка с сервера: /g/код
 const id = q.get('g');                                                  // старый локальный режим (без сервера)
 let game = id ? PH.store.get('game_' + id, null) : (q.has('demo') ? window.PH_DEMO : null);
@@ -112,6 +142,7 @@ function partnerName(g) { const h = (g.heroes || []).find(h => h.id === g.partne
 
 async function startServer() {
   try { meta = await PHAPI.api('/api/gift/' + slug); } catch (e) { show('missing'); return; }
+  setGiftTheme(q.get('theme') || meta.theme);
   const fake = { from: meta.from, recipient: meta.recipient, levels: new Array(meta.levels).fill(0), heroes: [] };
   document.title = 'Тебе подарок от ' + (meta.from || 'близкого человека') + ' — Pixel History';
   document.querySelectorAll('[data-name]').forEach(el => el.textContent = meta.recipient || 'Привет');
@@ -130,6 +161,7 @@ async function startServer() {
 
 function start() {
   if (!game) { show('missing'); return; }
+  setGiftTheme(q.get('theme') || game.giftTheme);
   document.title = 'Тебе подарок от ' + (game.from || 'близкого человека') + ' — Pixel History';
   document.querySelectorAll('[data-name]').forEach(el => el.textContent = partnerName(game));
   // 1. дата открытия

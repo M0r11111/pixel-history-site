@@ -1,0 +1,34 @@
+/* Тема страницы-подарка «День рождения»: светлая, розовая, с конфетти (конфетти летит — см. gift.html). */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
+:root {
+  --bg: #FFF0F6;
+  --surface: #FFFFFF;
+  --surface2: #FFD6E7;
+  --yellow: #FF4D8D;
+  --rust: #3DB2FF;
+  --moss: #22B07D;
+  --text: #3A1631;
+  --muted: #8A6B80;
+  --ink: #3A1631;
+  --mono: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+  color-scheme: light;
+}
+body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(rgba(255, 77, 141, .22) 3px, transparent 3.6px),
+    radial-gradient(rgba(61, 178, 255, .2) 3px, transparent 3.6px),
+    radial-gradient(rgba(255, 196, 0, .25) 3px, transparent 3.6px);
+  background-size: 80px 80px, 120px 120px, 150px 150px;
+  background-position: 0 0, 40px 60px, 70px 20px;
+}
+.btn { color: var(--text); border-color: var(--text); }
+.btn.primary { color: #FFFFFF; background: var(--yellow); border-color: var(--text); box-shadow: 6px 6px 0 var(--rust); }
+.btn.primary:hover { background: #FF3A7E; }
+.yellow { color: var(--yellow); }
+.kicker { color: var(--rust); }
+#play { background: #2A1024; }
+#play .holder > div { border-color: var(--yellow); }
+.logo canvas { background: #FFD6E7; }
+.count div { background: #FFFFFF; border-color: var(--surface2); }
+.count b { color: var(--yellow); }
