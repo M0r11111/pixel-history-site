@@ -66,6 +66,7 @@
     box.querySelector('#payClaim').onclick = async () => {
       try { p = await PHAPI.api('/api/payments/' + p.id + '/claim', { method: 'POST', body: { payer_phone: box.querySelector('#payPhone').value } }); }
       catch (e) { err(e.message); return; }
+      window.PH && PH.track && PH.track('claim');
       wait(p, kind, done);
     };
   }
@@ -99,6 +100,7 @@
       const due = game.due_kzt != null ? game.due_kzt : game.price_kzt;
       if (!b.require_payment || due <= 0) { resolve({ via: 'free' }); return; }
       onClose = pending => reject(Object.assign(new Error(pending ? 'Оплата проверяется' : 'Оплата не завершена'), { cancelled: !pending, pending: !!pending }));
+      window.PH && PH.track && PH.track('checkout');
       const k = b.methods.kaspi, kaspiReady = k.enabled && (k.qr || k.pay_link || k.phone), enough = b.balance >= due;
       show(`<h3>Оплата игры</h3>
         <div class="sum-row"><span>${esc(game.title || 'Новая игра')} · ${game.mode === 'human' ? 'делает человек' : 'делает ИИ'}</span></div>
@@ -129,6 +131,7 @@
       let b;
       try { b = await PHAPI.api('/api/billing'); } catch (e) { reject(e); return; }
       onClose = pending => reject(Object.assign(new Error(pending ? 'Пополнение проверяется' : 'Пополнение не завершено'), { cancelled: !pending, pending: !!pending }));
+      window.PH && PH.track && PH.track('topup_open');
       const k = b.methods.kaspi, kaspiReady = k.enabled && (k.qr || k.pay_link || k.phone);
       const presets = [5000, 10000, 15000, 30000];
       show(`<h3>Пополнить баланс</h3>

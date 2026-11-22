@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=17">
+<link rel="stylesheet" href="assets/style.css?v=18">
 <link id="site-theme" rel="stylesheet" href="assets/retro.css?v=3">
 </head>
 <body>
@@ -96,6 +96,8 @@
       <div id="summary" style="display:grid;gap:10px"></div>
       <div class="hr"></div>
       <div class="sum-row" style="align-items:center"><span class="px" style="color:var(--text);font-size:12px" id="planName"></span><span class="px yellow" style="font-size:14px" id="total"></span></div>
+      <label class="small" style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;text-align:left" id="agreeRow"><input type="checkbox" id="agree" style="margin-top:3px;flex:none">
+        <span>Принимаю <a class="yellow" href="offer.html" target="_blank">оферту</a> и соглашаюсь на <a class="yellow" href="privacy.html" target="_blank">обработку данных</a>, включая передачу истории и фото ИИ-сервису для создания игры</span></label>
       <button class="btn primary block" id="go">Создать игру</button>
       <p class="muted small" style="text-align:center" id="goNote"></p>
     </aside>
@@ -106,7 +108,7 @@
 <main class="wrap gen" id="gen" hidden>
   <span class="kicker">// Генерация</span>
   <h1 style="font-size:clamp(18px,3vw,28px)">ИИ строит вашу игру…</h1>
-  <p class="muted">Обычно это занимает несколько минут. Можно закрыть вкладку — пришлём ссылку на почту.</p>
+  <p class="muted">Обычно это занимает несколько минут. Можно закрыть вкладку — игра появится в личном кабинете, а если вы входили по почте, пришлём письмо.</p>
   <div class="pixel-frame"><canvas id="genScene" width="640" height="400"></canvas></div>
   <div style="width:100%;max-width:640px;display:flex;justify-content:space-between"><span class="px small">Прогресс</span><span class="px small yellow" id="pct">0%</span></div>
   <div class="bar" id="bar"></div>
@@ -171,9 +173,9 @@
 <div class="modal" id="soon"><div class="panel hot"><h3>Скоро</h3><p class="muted small">Это прототип сайта — эта кнопка заработает, когда подключим генерацию игр.</p><button class="btn" data-close>Понятно</button></div></div>
 
 <script src="assets/pixel.js?v=19"></script>
-<script src="assets/app.js?v=18"></script>
+<script src="assets/app.js?v=19"></script>
 <script src="assets/api.js?v=15"></script>
-<script src="assets/pay.js?v=1"></script>
+<script src="assets/pay.js?v=2"></script>
 <script src="game/scenes.js?v=1"></script>
 <script src="game/engine.js?v=21"></script>
 <script>
@@ -430,6 +432,7 @@ $('#themePreview').addEventListener('click', e => {
 });
 
 renderHeroes(); renderMoments(); setMode(state.mode);
+PH.track('builder');
 </script>
 <script>
 /* ===== Режим с сервером: аккаунт, ИИ-генерация, ссылка-подарок для любого устройства =====
@@ -480,6 +483,8 @@ renderHeroes(); renderMoments(); setMode(state.mode);
   }
 
   $('#go').onclick = async () => {
+    PH.track('create_click');
+    if (!$('#agree').checked) { const r = $('#agreeRow'); r.style.outline = '3px solid var(--yellow)'; r.style.outlineOffset = '4px'; r.scrollIntoView({ block: 'center' }); setTimeout(() => r.style.outline = '', 2500); return; }
     const me = await PHAPI.me();
     if (!me) { try { PH.store.set('builder', snapshot()); } catch (e) {} location.href = '/login.html?next=' + encodeURIComponent('/create.html'); return; }
     const btn = $('#go'); btn.disabled = true;

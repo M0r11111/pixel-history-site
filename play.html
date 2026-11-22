@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=17">
+<link rel="stylesheet" href="assets/style.css?v=18">
 <link id="site-theme" rel="stylesheet" href="assets/retro.css?v=3">
 <style>
   .play-wrap { max-width: min(1100px, calc((100vh - 220px) * 16 / 9)); margin: 0 auto; }
@@ -44,7 +44,7 @@
 </main>
 
 <script src="assets/pixel.js?v=19"></script>
-<script src="assets/app.js?v=18"></script>
+<script src="assets/app.js?v=19"></script>
 <script src="assets/api.js?v=15"></script>
 <script src="game/scenes.js?v=1"></script>
 <script src="game/engine.js?v=21"></script>
@@ -57,6 +57,7 @@
     document.getElementById('gameTitle').textContent = g.title;
     document.title = g.title + ' — Pixel History';
     window.__phGame = PHGame.start(document.getElementById('game'), g);   // для проверки уровней
+    PH.track('demo_play');
   }
   if (q.get('id')) {   // своя игра с сервера (из кабинета)
     document.getElementById('kicker').textContent = '// Ваша игра';

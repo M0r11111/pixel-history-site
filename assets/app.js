@@ -115,5 +115,62 @@
     }, true);
   });
 
+  // ---------- общий подвал: документы и контакты (контакты заполняются в админке) ----------
+  const SITE = { info: null };
+  const isGift = /gift\.html$/.test(location.pathname) || /^\/g\//.test(location.pathname);
+  const isAdmin = /\/admin\//.test(location.pathname);
+  function contactLinks(i) {
+    const out = [];
+    if (i.telegram) out.push(['Telegram', 'https://t.me/' + i.telegram.replace(/^@|https?:\/\/t\.me\//g, '')]);
+    if (i.whatsapp) out.push(['WhatsApp', 'https://wa.me/' + i.whatsapp.replace(/\D/g, '')]);
+    if (i.instagram) out.push(['Instagram', 'https://instagram.com/' + i.instagram.replace(/^@|https?:\/\/(www\.)?instagram\.com\//g, '')]);
+    if (i.email) out.push([i.email, 'mailto:' + i.email]);
+    if (i.phone) out.push([i.phone, 'tel:' + i.phone.replace(/[^\d+]/g, '')]);
+    return out;
+  }
+  function renderFooter() {
+    if (isGift || isAdmin) return;
+    const base = /\/admin\//.test(location.pathname) ? '../' : '';
+    const i = SITE.info || {};
+    const contacts = contactLinks(i).map(([t, h]) => `<a href="${h}" target="_blank" rel="noopener">${t.replace(/</g, '')}</a>`).join('');
+    let f = document.querySelector('body > footer');
+    if (!f) { f = document.createElement('footer'); document.body.appendChild(f); }
+    f.className = 'site-foot';
+    f.innerHTML = `<div class="wrap"><div class="foot-brand"><span class="px yellow" style="font-size:12px">PIXEL HISTORY</span><span class="muted">© ${new Date().getFullYear()} · Ваши истории — в пикселях.</span></div>
+      <nav class="foot-docs"><a href="${base}play.html">Демо</a><a href="${base}offer.html">Оферта</a><a href="${base}privacy.html">Конфиденциальность</a></nav>
+      ${contacts ? `<nav class="foot-contacts"><span class="muted">Поддержка:</span>${contacts}</nav>` : ''}</div>`;
+  }
+  function fillSite() {   // реквизиты в оферте и политике: <span data-site="owner|iin|city|contacts">
+    const i = SITE.info; if (!i) return;
+    document.querySelectorAll('[data-site]').forEach(el => {
+      const k = el.dataset.site;
+      if (k === 'contacts') { const c = contactLinks(i); if (c.length) el.innerHTML = c.map(([t, h]) => `<a class="yellow" href="${h}">${t.replace(/</g, '')}</a>`).join(', '); }
+      else if (i[k]) el.textContent = i[k];
+    });
+  }
+  // ---------- своя аналитика: обезличенно, только на нашем сервере ----------
+  let serverUp = null;
+  function vid() {
+    try { let v = localStorage.getItem('ph_vid'); if (!v) { v = Array.from(crypto.getRandomValues(new Uint8Array(12)), b => b.toString(16).padStart(2, '0')).join(''); localStorage.setItem('ph_vid', v); } return v; }
+    catch (e) { return 'anon' + Math.random().toString(16).slice(2, 14); }
+  }
+  function track(name) {
+    if (isAdmin || navigator.doNotTrack === '1' || window.doNotTrack === '1') return;
+    (serverUp || Promise.resolve(false)).then(ok => {
+      if (!ok) return;
+      const q = new URLSearchParams(location.search), r = document.referrer ? new URL(document.referrer).hostname : '';
+      const body = { vid: vid(), name, path: location.pathname.slice(0, 120), ref: r === location.hostname ? '' : r.replace(/^www\./, ''),
+        utm: q.get('utm_source') || '', dev: matchMedia('(pointer:coarse)').matches ? 'mobile' : 'desktop' };
+      fetch('/api/t', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), keepalive: true }).catch(() => {});
+    });
+  }
+  window.PH.track = track;
+  document.addEventListener('DOMContentLoaded', () => {
+    serverUp = fetch(location.origin + '/api/site', { cache: 'no-store' }).then(r => r.ok ? r.json() : null)
+      .then(j => { if (j) { SITE.info = j; renderFooter(); fillSite(); } return !!j; }).catch(() => false);
+    renderFooter();
+    track('page');
+  });
+
   document.addEventListener('DOMContentLoaded', () => { paint(document); bindTags(document); });
 })();

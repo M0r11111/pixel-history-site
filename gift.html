@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=17">
+<link rel="stylesheet" href="assets/style.css?v=18">
 <link id="site-theme" rel="stylesheet" href="assets/retro.css?v=3">
 <style>
   body { min-height: 100vh; min-height: 100dvh; overflow-x: hidden; }
@@ -95,7 +95,7 @@
 </section>
 
 <script src="assets/pixel.js?v=19"></script>
-<script src="assets/app.js?v=18"></script>
+<script src="assets/app.js?v=19"></script>
 <script src="game/scenes.js?v=1"></script>
 <script src="game/engine.js?v=21"></script>
 <script src="games/demo.js?v=17"></script>
@@ -162,6 +162,7 @@ async function startServer() {
 
 function start() {
   if (!game) { show('missing'); return; }
+  PH.track('gift_open');
   setGiftTheme(q.get('theme') || game.giftTheme);
   document.title = 'Тебе подарок' + (game.from ? ' · от: ' + game.from : '') + ' — Pixel History';
   document.querySelectorAll('[data-name]').forEach(el => el.textContent = partnerName(game));
